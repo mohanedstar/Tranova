@@ -15,13 +15,13 @@
 
 ## 📖 Table of Contents
 
-- [Project Overview](#project-overview)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Installation](#installation)
-- [API Documentation](#api-documentation)
-- [Testing](#testing)
-- [Deployment](#deployment)
+- [Project Overview](#-project-overview)
+- [Features](#-features)
+- [Tech Stack](#-tech-stack)
+- [Installation](#-installation)
+- [API Documentation](#-api-documentation)
+- [Testing](#-testing)
+- [Deployment](#-deployment)
 
 ---
 
@@ -39,12 +39,14 @@
 ## ✨ Features
 
 ### 🔐 Authentication & Security
+
 - JWT-based authentication (Laravel Sanctum)
 - Email verification system
 - Password reset functionality
 - Role-based access control (RBAC)
 
 ### 👥 User Roles
+
 | Role | Permissions |
 |------|-------------|
 | **Student** | Apply, submit reports, view evaluations, download certificates |
@@ -53,6 +55,7 @@
 | **Admin** | Full system management, generate certificates |
 
 ### 💼 Core Features
+
 - 📝 Internship opportunities management
 - 📄 Application submission with CV upload
 - 📊 Weekly reports tracking
@@ -66,6 +69,7 @@
 ## 🛠️ Tech Stack
 
 ### Backend
+
 - **Framework:** Laravel 11
 - **Language:** PHP 8.3
 - **Database:** MySQL 8.0
@@ -78,6 +82,7 @@
 ## 📦 Installation
 
 ### Prerequisites
+
 - PHP >= 8.3
 - Composer
 - MySQL >= 8.0
@@ -110,97 +115,135 @@ php artisan storage:link
 
 # 7. Start server
 php artisan serve
+```
 
+Visit: `http://127.0.0.1:8000`
 
-Visit: http://127.0.0.1:8000
+---
 
+## 📡 API Documentation
 
-📡 API Documentation
-Base URL
+### Base URL
+
+```
 http://127.0.0.1:8000/api
+```
 
-Authentication
+### Authentication
+
+```
 Authorization: Bearer {token}
+```
 
-Main Endpoints
+### Main Endpoints
 
-🔐 Authentication
-POST /api/register - Register new user
-POST /api/login - Login
-POST /api/logout - Logout
-GET /api/profile - Get profile
+#### 🔐 Authentication
 
-📧 Email Verification
-GET /api/email/verify/{id}/{hash} - Verify email
-POST /api/email/resend - Resend verification
+- `POST /api/register` - Register new user
+- `POST /api/login` - Login
+- `POST /api/logout` - Logout
+- `GET /api/profile` - Get profile
 
-💼 Opportunities
-GET /api/opportunities - List opportunities
-POST /api/provider/opportunities - Create opportunity
-POST /api/student/opportunities/{id}/apply - Apply
+#### 📧 Email Verification
 
-📊 Reports
-POST /api/student/reports - Submit report
-GET /api/student/reports - Get reports
-POST /api/supervisor/reports/{id}/review - Review report
+- `GET /api/email/verify/{id}/{hash}` - Verify email
+- `POST /api/email/resend` - Resend verification
 
-⭐ Evaluations
-POST /api/provider/evaluations - Provider evaluation
-POST /api/supervisor/evaluations - Supervisor evaluation
+#### 💼 Opportunities
 
-🏆 Certificates
-GET /api/student/certificates - List certificates
-GET /api/student/certificates/download - Download
-POST /api/admin/records/{id}/generate-certificate - Generate
+- `GET /api/opportunities` - List opportunities
+- `POST /api/provider/opportunities` - Create opportunity
+- `POST /api/student/opportunities/{id}/apply` - Apply
 
-🔔 Notifications
-GET /api/notifications - Get all
-POST /api/notifications/{id}/read - Mark as read
+#### 📊 Reports
 
-💬 Messages
-POST /api/messages - Send message
-GET /api/messages/inbox - Get inbox
+- `POST /api/student/reports` - Submit report
+- `GET /api/student/reports` - Get reports
+- `POST /api/supervisor/reports/{id}/review` - Review report
 
-📖 Full API Documentation: docs/API.md
+#### ⭐ Evaluations
 
-🧪 Testing
+- `POST /api/provider/evaluations` - Provider evaluation
+- `POST /api/supervisor/evaluations` - Supervisor evaluation
 
-Run All Tests
+#### 🏆 Certificates
 
+- `GET /api/student/certificates` - List certificates
+- `GET /api/student/certificates/download` - Download
+- `POST /api/admin/records/{id}/generate-certificate` - Generate
+
+#### 🔔 Notifications
+
+- `GET /api/notifications` - Get all
+- `POST /api/notifications/{id}/read` - Mark as read
+
+#### 💬 Messages
+
+- `POST /api/messages` - Send message
+- `GET /api/messages/inbox` - Get inbox
+
+📖 **Full API Documentation:** [docs/API.md](docs/API.md)
+
+---
+
+## 🧪 Testing
+
+### Run All Tests
+
+```bash
 php artisan test
+```
 
-Test Coverage
-Category          Tests           Status
-Unit Tests          6               ✅
-Authentication      4               ✅
-Opportunities       9               ✅
-Role Permissions    21              ✅
-Weekly Reports      9               ✅
-Evaluations         13              ✅
-Certificates        12              ✅
-Notifications       17              ✅
-Messages            10              ✅
-Password Reset      11              ✅
-Email Verification  19              ✅
-Total               131+            ✅ All Passing
+### Test Coverage
 
+| Category | Tests | Status |
+|----------|-------|--------|
+| Unit Tests | 6 | ✅ |
+| Authentication | 4 | ✅ |
+| Opportunities | 9 | ✅ |
+| Role Permissions | 21 | ✅ |
+| Weekly Reports | 9 | ✅ |
+| Evaluations | 13 | ✅ |
+| Certificates | 12 | ✅ |
+| Notifications | 17 | ✅ |
+| Messages | 10 | ✅ |
+| Password Reset | 11 | ✅ |
+| Email Verification | 19 | ✅ |
+| **Total** | **131+** | ✅ **All Passing** |
 
-🚀 Deployment
-Deploy to Render
-Create account on render.com
-Click New + → Web Service
-Connect your GitHub repository
-Configure:
-Build Command: composer install --no-dev && php artisan config:cache
-Start Command: php artisan serve --host=0.0.0.0 --port=$PORT
-Add environment variables
-Click Create Web Service
-📖 Full Deployment Guide: docs/DEPLOYMENT.md
+---
 
+## 🚀 Deployment
 
- License
+### Deploy to Render
+
+1. Create account on [render.com](https://render.com)
+2. Click **New +** → **Web Service**
+3. Connect your GitHub repository
+4. Configure:
+   - **Build Command:** `composer install --no-dev && php artisan config:cache`
+   - **Start Command:** `php artisan serve --host=0.0.0.0 --port=$PORT`
+5. Add environment variables
+6. Click **Create Web Service**
+
+📖 **Full Deployment Guide:** [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
+
+---
+
+## 📄 License
+
 This project is proprietary and confidential.
 
-👥 Team
-Development Team - Trinova Platform
+---
 
+## 👥 Team
+
+- **Development Team** - Trinova Platform
+
+---
+
+<div align="center">
+
+**Made with ❤️ In TaqaT **
+
+</div>

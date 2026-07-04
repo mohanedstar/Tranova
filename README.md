@@ -1,59 +1,206 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🎓 Trinova - Student Internship Management Platform
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+<div align="center">
 
-## About Laravel
+**A comprehensive platform for managing student internships**
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+![Laravel](https://img.shields.io/badge/Laravel-11-FF2D20?logo=laravel)
+![PHP](https://img.shields.io/badge/PHP-8.3-777BB4?logo=php)
+![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?logo=mysql)
+![Tests](https://img.shields.io/badge/Tests-131+-4CAF50)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+</div>
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## 📖 Table of Contents
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+- [Project Overview](#project-overview)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Installation](#installation)
+- [API Documentation](#api-documentation)
+- [Testing](#testing)
+- [Deployment](#deployment)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## 🎯 Project Overview
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+**Trinova** is a modern platform designed to streamline the management of student internships by connecting:
 
-### Premium Partners
+- 🎓 **Students** - Find and apply for opportunities
+- 🏢 **Providers** - Offer training positions
+- 👨‍🏫 **Supervisors** - Monitor student progress
+- 🛡️ **Admins** - Manage the entire system
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+---
 
-## Contributing
+## ✨ Features
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 🔐 Authentication & Security
+- JWT-based authentication (Laravel Sanctum)
+- Email verification system
+- Password reset functionality
+- Role-based access control (RBAC)
 
-## Code of Conduct
+### 👥 User Roles
+| Role | Permissions |
+|------|-------------|
+| **Student** | Apply, submit reports, view evaluations, download certificates |
+| **Provider** | Create opportunities, review applications, evaluate students |
+| **Supervisor** | Monitor students, review reports, academic evaluations |
+| **Admin** | Full system management, generate certificates |
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 💼 Core Features
+- 📝 Internship opportunities management
+- 📄 Application submission with CV upload
+- 📊 Weekly reports tracking
+- ⭐ Multi-criteria evaluation system
+- 🏆 Professional PDF certificates (English)
+- 🔔 Real-time notifications
+- 💬 Internal messaging system
 
-## Security Vulnerabilities
+---
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## 🛠️ Tech Stack
 
-## License
+### Backend
+- **Framework:** Laravel 11
+- **Language:** PHP 8.3
+- **Database:** MySQL 8.0
+- **Authentication:** Laravel Sanctum
+- **PDF:** DomPDF
+- **Testing:** Pest PHP (131+ tests)
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+
+## 📦 Installation
+
+### Prerequisites
+- PHP >= 8.3
+- Composer
+- MySQL >= 8.0
+
+### Steps
+
+```bash
+# 1. Clone repository
+git clone https://github.com/mohanedstar/Tranova.git
+cd Trinova
+
+# 2. Install dependencies
+composer install
+
+# 3. Configure environment
+copy .env.example .env
+php artisan key:generate
+
+# 4. Configure database in .env
+DB_DATABASE=trinova
+DB_USERNAME=root
+DB_PASSWORD=your_password
+
+# 5. Run migrations
+php artisan migrate
+php artisan db:seed
+
+# 6. Create storage link
+php artisan storage:link
+
+# 7. Start server
+php artisan serve
+
+
+Visit: http://127.0.0.1:8000
+
+
+📡 API Documentation
+Base URL
+http://127.0.0.1:8000/api
+
+Authentication
+Authorization: Bearer {token}
+
+Main Endpoints
+
+🔐 Authentication
+POST /api/register - Register new user
+POST /api/login - Login
+POST /api/logout - Logout
+GET /api/profile - Get profile
+
+📧 Email Verification
+GET /api/email/verify/{id}/{hash} - Verify email
+POST /api/email/resend - Resend verification
+
+💼 Opportunities
+GET /api/opportunities - List opportunities
+POST /api/provider/opportunities - Create opportunity
+POST /api/student/opportunities/{id}/apply - Apply
+
+📊 Reports
+POST /api/student/reports - Submit report
+GET /api/student/reports - Get reports
+POST /api/supervisor/reports/{id}/review - Review report
+
+⭐ Evaluations
+POST /api/provider/evaluations - Provider evaluation
+POST /api/supervisor/evaluations - Supervisor evaluation
+
+🏆 Certificates
+GET /api/student/certificates - List certificates
+GET /api/student/certificates/download - Download
+POST /api/admin/records/{id}/generate-certificate - Generate
+
+🔔 Notifications
+GET /api/notifications - Get all
+POST /api/notifications/{id}/read - Mark as read
+
+💬 Messages
+POST /api/messages - Send message
+GET /api/messages/inbox - Get inbox
+
+📖 Full API Documentation: docs/API.md
+
+🧪 Testing
+
+Run All Tests
+
+php artisan test
+
+Test Coverage
+Category          Tests           Status
+Unit Tests          6               ✅
+Authentication      4               ✅
+Opportunities       9               ✅
+Role Permissions    21              ✅
+Weekly Reports      9               ✅
+Evaluations         13              ✅
+Certificates        12              ✅
+Notifications       17              ✅
+Messages            10              ✅
+Password Reset      11              ✅
+Email Verification  19              ✅
+Total               131+            ✅ All Passing
+
+
+🚀 Deployment
+Deploy to Render
+Create account on render.com
+Click New + → Web Service
+Connect your GitHub repository
+Configure:
+Build Command: composer install --no-dev && php artisan config:cache
+Start Command: php artisan serve --host=0.0.0.0 --port=$PORT
+Add environment variables
+Click Create Web Service
+📖 Full Deployment Guide: docs/DEPLOYMENT.md
+
+
+ License
+This project is proprietary and confidential.
+
+👥 Team
+Development Team - Trinova Platform
+

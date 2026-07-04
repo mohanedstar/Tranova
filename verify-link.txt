@@ -1,0 +1,1 @@
+http://localhost:8000/api/email/verify/7/fbea4d80d7f023edc1a4e9d3f1dd2327c2047fec?expires=1783090885&signature=7d0d58640a64b06a14d8f490f9a5ea365cb39beb27d502291e664d3536d5ff97no

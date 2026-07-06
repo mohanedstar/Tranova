@@ -41,12 +41,12 @@ class NotificationController extends Controller
         $notification = $request->user()->notifications()->find($id);
 
         if (!$notification) {
-            return response()->json(['message' => 'الإشعار غير موجود'], 404);
+            return response()->json(['message' => __('messages.notification.not_found')], 404);
         }
 
         $notification->markAsRead();
 
-        return response()->json(['message' => 'تم تعليم الإشعار كمقروء']);
+        return response()->json(['message' => __('messages.notification.marked_read')]);
     }
 
     // تعليم جميع الإشعارات كمقروءة
@@ -54,7 +54,7 @@ class NotificationController extends Controller
     {
         $request->user()->unreadNotifications->markAsRead();
 
-        return response()->json(['message' => 'تم تعليم جميع الإشعارات كمقروءة']);
+        return response()->json(['message' => __('messages.notification.all_marked_read')]);
     }
 
     // حذف إشعار
@@ -63,12 +63,12 @@ class NotificationController extends Controller
         $notification = $request->user()->notifications()->find($id);
 
         if (!$notification) {
-            return response()->json(['message' => 'الإشعار غير موجود'], 404);
+            return response()->json(['message' => __('messages.notification.not_found')], 404);
         }
 
         $notification->delete();
 
-        return response()->json(['message' => 'تم حذف الإشعار']);
+        return response()->json(['message' => __('messages.notification.deleted')]);
     }
 
     // حذف جميع الإشعارات
@@ -76,6 +76,6 @@ class NotificationController extends Controller
     {
         $request->user()->notifications()->delete();
 
-        return response()->json(['message' => 'تم حذف جميع الإشعارات']);
+        return response()->json(['message' => __('messages.notification.all_deleted')]);
     }
 }

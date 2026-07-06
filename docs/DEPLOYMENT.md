@@ -2,13 +2,14 @@
 
 <div align="center">
 
-**Complete guide for deploying Trinova Platform to production with AI features**
+**Complete guide for deploying Trinova Platform to production with AI features & Multilingual Support**
 
 ![Render](https://img.shields.io/badge/Render-Recommended-46E3B7?style=flat-square&logo=render)
 ![Docker](https://img.shields.io/badge/Docker-Supported-2496ED?style=flat-square&logo=docker)
 ![AWS](https://img.shields.io/badge/AWS-Supported-FF9900?style=flat-square&logo=amazon-aws)
 ![HTTPS](https://img.shields.io/badge/HTTPS-Required-00C853?style=flat-square)
 ![AI](https://img.shields.io/badge/AI-Groq%20LLM-FF6B35?style=flat-square)
+![Languages](https://img.shields.io/badge/Languages-Arabic%20%7C%20English-007ACC?style=flat-square)
 
 </div>
 
@@ -23,7 +24,11 @@
 - [Deploy to AWS](#-deploy-to-aws)
 - [Deploy with Docker](#-deploy-with-docker)
 - [Environment Configuration](#-environment-configuration)
+- [Multilingual Configuration](#-multilingual-configuration)
 - [AI Configuration](#-ai-configuration)
+- [University Email Configuration](#-university-email-configuration)
+- [Admin Review System](#-admin-review-system)
+- [Admin User Management](#-admin-user-management)
 - [Database Setup](#-database-setup)
 - [Storage Configuration](#-storage-configuration)
 - [SSL/HTTPS Setup](#-sslhttps-setup)
@@ -35,6 +40,7 @@
 - [Updates & Rollbacks](#-updates--rollbacks)
 - [Troubleshooting](#-troubleshooting)
 - [Cost Estimation](#-cost-estimation)
+- [Post-Deployment Checklist](#-post-deployment-checklist)
 
 ---
 
@@ -54,7 +60,7 @@
 
 Before deploying, ensure:
 
-- [ ] All tests passing (`php artisan test` - 165+ tests)
+- [ ] All tests passing (`php artisan test` - 227+ tests)
 - [ ] `.env` configured for production
 - [ ] `APP_DEBUG=false`
 - [ ] `APP_ENV=production`
@@ -67,6 +73,11 @@ Before deploying, ensure:
 - [ ] **Groq API Key** obtained (for AI features)
 - [ ] **University email domains** configured
 - [ ] **Admin accounts** created for provider review
+- [ ] **Language settings** configured (APP_LOCALE, APP_SUPPORTED_LOCALES)
+- [ ] **SetLocale middleware** registered in bootstrap/app.php
+- [ ] **Language files** exist in `lang/ar/` and `lang/en/`
+- [ ] **Translation keys** added to `LanguageMapper.php`
+- [ ] **Certificate fonts** configured (DejaVu Sans for Arabic support)
 
 ---
 
@@ -81,6 +92,7 @@ Before deploying, ensure:
 - ✅ Simple configuration
 - ✅ Auto-deploy on push
 - ✅ **AI features work out of the box** (via Groq API)
+- ✅ **Multilingual support** works automatically
 
 ---
 
@@ -93,6 +105,11 @@ APP_NAME=Trinova
 APP_ENV=production
 APP_DEBUG=false
 APP_URL=https://your-app.onrender.com
+
+# Language Configuration
+APP_LOCALE=ar
+APP_FALLBACK_LOCALE=en
+APP_SUPPORTED_LOCALES=en,ar
 
 DB_CONNECTION=mysql
 DB_HOST=your-db-host
@@ -138,6 +155,12 @@ services:
         value: false
       - key: APP_KEY
         generateValue: true
+      - key: APP_LOCALE
+        value: ar
+      - key: APP_FALLBACK_LOCALE
+        value: en
+      - key: APP_SUPPORTED_LOCALES
+        value: en,ar
       - key: DB_CONNECTION
         value: mysql
       - key: DB_HOST
@@ -189,14 +212,25 @@ APP_ENV=production
 APP_DEBUG=false
 APP_URL=https://trinova-api.onrender.com
 APP_KEY=base64:your-generated-key
+
+# Language Settings
+APP_LOCALE=ar
+APP_FALLBACK_LOCALE=en
+APP_SUPPORTED_LOCALES=en,ar
+
+# Database
 DB_CONNECTION=mysql
 DB_HOST=your-db-host.onrender.com
 DB_PORT=3306
 DB_DATABASE=trinova
 DB_USERNAME=trinova
 DB_PASSWORD=your-password
+
+# Mail
 MAIL_MAILER=log
 QUEUE_CONNECTION=sync
+
+# AI
 AI_PROVIDER=groq
 GROQ_API_KEY=your_groq_api_key_here
 GROQ_MODEL=llama-3.3-70b-versatile
@@ -274,6 +308,7 @@ curl https://your-app.onrender.com/api/opportunities
 # Test registration (Student)
 curl -X POST https://your-app.onrender.com/api/register \
   -H "Content-Type: application/json" \
+  -H "Accept-Language: ar" \
   -d '{
     "name": "Test User",
     "email": "test@example.com",
@@ -290,9 +325,20 @@ curl -X POST https://your-app.onrender.com/api/register \
 curl -X POST https://your-app.onrender.com/api/student/ai/reports/improve \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_STUDENT_TOKEN" \
+  -H "X-Language: ar" \
   -d '{
     "content": "تعلمت Laravel اليوم وعملت على database"
   }'
+
+# Test Language Switching
+curl -X GET https://your-app.onrender.com/api/profile \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "X-Language: en"
+
+# Test Admin User Management
+curl -X GET https://your-app.onrender.com/api/admin/users \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
+  -H "X-Language: ar"
 ```
 
 ---
@@ -354,6 +400,11 @@ sudo nano .env
 Update with production values including:
 
 ```env
+# Language Configuration
+APP_LOCALE=ar
+APP_FALLBACK_LOCALE=en
+APP_SUPPORTED_LOCALES=en,ar
+
 # AI Configuration
 AI_PROVIDER=groq
 GROQ_API_KEY=your_groq_api_key_here
@@ -376,6 +427,7 @@ sudo php artisan config:cache
 sudo chown -R www-data:www-data /var/www/Tranova
 sudo chmod -R 775 /var/www/Tranova/storage
 sudo chmod -R 775 /var/www/Tranova/bootstrap/cache
+sudo chmod -R 775 /var/www/Tranova/lang
 ```
 
 ### Step 7: Configure Nginx
@@ -392,6 +444,7 @@ server {
 
     add_header X-Frame-Options "SAMEORIGIN";
     add_header X-Content-Type-Options "nosniff";
+    add_header Accept-Language "ar, en";
 
     index index.php;
     charset utf-8;
@@ -487,6 +540,9 @@ services:
     volumes:
       - ./:/var/www
     environment:
+      - APP_LOCALE=ar
+      - APP_FALLBACK_LOCALE=en
+      - APP_SUPPORTED_LOCALES=en,ar
       - AI_PROVIDER=groq
       - GROQ_API_KEY=${GROQ_API_KEY}
       - GROQ_MODEL=llama-3.3-70b-versatile
@@ -572,6 +628,11 @@ APP_DEBUG=false
 APP_URL=https://trinova.com
 APP_KEY=base64:your-generated-key
 
+# Language Configuration
+APP_LOCALE=ar
+APP_FALLBACK_LOCALE=en
+APP_SUPPORTED_LOCALES=en,ar
+
 # Database
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
@@ -602,6 +663,117 @@ CACHE_STORE=database
 
 # Broadcasting
 BROADCAST_CONNECTION=log
+```
+
+### Language Configuration Reference
+
+| Variable | Description | Default | Example |
+|----------|-------------|---------|---------|
+| `APP_LOCALE` | Default language | `ar` | `en`, `ar` |
+| `APP_FALLBACK_LOCALE` | Fallback language | `en` | `en`, `ar` |
+| `APP_SUPPORTED_LOCALES` | Supported languages | `en,ar` | `en,ar,fr` |
+
+---
+
+## 🌍 Multilingual Configuration
+
+### How It Works
+
+Trinova uses a **dynamic language detection system** that automatically adapts to each user's preference.
+
+### Language Detection Priority
+
+| Priority | Source | Example |
+|----------|--------|---------|
+| 1️⃣ | Query Parameter | `?lang=ar` |
+| 2️⃣ | Custom Header | `X-Language: en` |
+| 3️⃣ | User Preference | `preferred_language` in database |
+| 4️⃣ | Accept-Language Header | `Accept-Language: ar,en;q=0.9` |
+| 5️⃣ | Default from .env | `APP_LOCALE=ar` |
+
+### SetLocale Middleware
+
+The `SetLocale` middleware is automatically applied to all API routes:
+
+```php
+// In bootstrap/app.php
+$middleware->api(append: [
+    \App\Http\Middleware\SetLocale::class,
+]);
+```
+
+**Important:** In testing environment, the middleware uses only `APP_LOCALE` to ensure consistent test results.
+
+### User Language Preference
+
+Users can change their preferred language via API:
+
+```http
+POST /api/user/language
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+    "language": "en"
+}
+```
+
+### Language Files Structure
+
+```
+lang/
+├── ar/
+│   └── messages.php    # Arabic translations
+├── en/
+│   └── messages.php    # English translations
+└── README.md
+```
+
+### Translation Categories
+
+| Category | Description |
+|----------|-------------|
+| `auth` | Authentication messages |
+| `validation` | Validation errors |
+| `opportunity` | Opportunity-related |
+| `application` | Application workflow |
+| `report` | Weekly reports |
+| `evaluation` | Evaluations |
+| `message` | Messaging system |
+| `notification` | Notifications |
+| `ai` | AI features |
+| `admin` | Admin management |
+| `certificate` | Certificates |
+| `general` | General messages |
+
+### Custom Artisan Commands
+
+```bash
+# Scan project for Arabic texts
+php artisan lang:scan --path=app
+
+# Preview translation changes
+php artisan lang:preview --controller=AuthController.php
+
+# Apply translations with backup
+php artisan lang:replace --backup --force
+
+# Generate translation keys
+php artisan lang:generate --path=app
+```
+
+### Testing Multilingual Support
+
+```bash
+# Test Arabic response
+curl -X GET https://your-app.com/api/profile \
+  -H "Authorization: Bearer {token}" \
+  -H "X-Language: ar"
+
+# Test English response
+curl -X GET https://your-app.com/api/profile \
+  -H "Authorization: Bearer {token}" \
+  -H "X-Language: en"
 ```
 
 ---
@@ -742,6 +914,7 @@ php artisan tinker
     'role' => 'admin',
     'email_verified_at' => now(),
     'account_status' => 'active',
+    'preferred_language' => 'ar',
 ]);
 ```
 
@@ -761,6 +934,70 @@ GET    /api/admin/providers/pending   - List pending providers
 POST   /api/admin/providers/{id}/approve - Approve provider
 POST   /api/admin/providers/{id}/reject  - Reject provider
 ```
+
+---
+
+## 👨‍💼 Admin User Management
+
+Admins have full control over all users in the system.
+
+### Available Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/admin/users` | List all users (with filters) |
+| GET | `/api/admin/users/{id}` | View user details |
+| POST | `/api/admin/users` | Create new user |
+| PUT | `/api/admin/users/{id}` | Update user |
+| DELETE | `/api/admin/users/{id}` | Delete user |
+| POST | `/api/admin/users/{id}/suspend` | Suspend user account |
+| POST | `/api/admin/users/{id}/activate` | Activate user account |
+| POST | `/api/admin/users/{id}/reset-password` | Reset user password |
+
+### Create Initial Users
+
+```bash
+php artisan tinker
+```
+
+```php
+// Create a student
+\App\Models\User::create([
+    'name' => 'Test Student',
+    'email' => 'student@trinova.com',
+    'password' => bcrypt('password123'),
+    'role' => 'student',
+    'email_verified_at' => now(),
+    'account_status' => 'active',
+]);
+
+// Create a provider
+\App\Models\User::create([
+    'name' => 'Test Provider',
+    'email' => 'provider@trinova.com',
+    'password' => bcrypt('password123'),
+    'role' => 'provider',
+    'email_verified_at' => now(),
+    'account_status' => 'active',
+]);
+
+// Create a supervisor
+\App\Models\User::create([
+    'name' => 'Test Supervisor',
+    'email' => 'supervisor@iugaza.edu.ps',
+    'password' => bcrypt('password123'),
+    'role' => 'supervisor',
+    'email_verified_at' => now(),
+    'account_status' => 'active',
+]);
+```
+
+### Security Features
+
+- ✅ **Self-protection** - Admins cannot delete/suspend themselves
+- ✅ **Token invalidation** - Password reset invalidates all tokens
+- ✅ **Cascade deletion** - Deleting user removes all related records
+- ✅ **Role validation** - Only valid roles can be created
 
 ---
 
@@ -914,6 +1151,14 @@ Monitor AI API usage in the logs:
 tail -f storage/logs/laravel.log | grep "AI"
 ```
 
+### Language Detection Monitoring
+
+Monitor language detection in logs:
+
+```bash
+tail -f storage/logs/laravel.log | grep "SetLocale"
+```
+
 ---
 
 ## 💾 Backups
@@ -1002,6 +1247,12 @@ add_header Content-Security-Policy "default-src 'self'" always;
 - All new provider accounts require admin approval
 - University email validation for supervisors
 - Rate limiting on registration endpoints
+
+### 8. Admin User Management Protection
+
+- Admins cannot delete/suspend themselves
+- Password reset invalidates all tokens
+- Cascade deletion removes all related records
 
 ---
 
@@ -1097,6 +1348,39 @@ composer dump-autoload
 - Verify `UniversityEmail` rule is working
 - Add domain to allowed list if needed
 
+### Problem: "Arabic text shows as ???"
+
+**Solution:**
+- Verify database charset is `utf8mb4`
+- Check `DB_CHARSET=utf8mb4` in `.env`
+- Ensure `DejaVu Sans` font is available for PDF generation
+- Check `lang/ar/messages.php` file exists
+
+### Problem: "Language not changing"
+
+**Solution:**
+- Verify `SetLocale` middleware is registered in `bootstrap/app.php`
+- Check `APP_SUPPORTED_LOCALES` in `.env`
+- Verify `lang/ar/` and `lang/en/` directories exist
+- Clear config cache: `php artisan config:clear`
+- Check user's `preferred_language` in database
+
+### Problem: "Admin cannot delete user"
+
+**Solution:**
+- Admin cannot delete themselves (self-protection)
+- Check if user exists: `GET /api/admin/users/{id}`
+- Verify admin role: `php artisan tinker` → `User::find(1)->role`
+
+### Problem: "Certificate generation fails"
+
+**Solution:**
+- Check `storage/app/public/certificates/` directory permissions
+- Verify `DejaVu Sans` font is available
+- Check PDF generation logs
+- Ensure record status is `completed` or `approved`
+- Verify final grade >= 60
+
 ---
 
 ## 💰 Cost Estimation
@@ -1134,14 +1418,23 @@ composer dump-autoload
 | Daily Limit | 14,400 requests/day |
 | **Total** | **$0/month** ✅ |
 
+### Multilingual Support
+
+| Service | Cost |
+|---------|------|
+| Translation System | **Built-in** |
+| Language Files | **Included** |
+| SetLocale Middleware | **Included** |
+| **Total** | **$0/month** ✅ |
+
 ### Total Cost Summary
 
-| Platform | Base Cost | AI Cost | **Total** |
-|----------|-----------|---------|-----------|
-| **Render** | $0-14 | $0 | **$0-14/month** |
-| **DigitalOcean** | $21 | $0 | **$21/month** |
-| **AWS** | $0 (12mo) | $0 | **$0/month** |
-| **Docker** | Varies | $0 | **Varies** |
+| Platform | Base Cost | AI Cost | Languages | **Total** |
+|----------|-----------|---------|-----------|-----------|
+| **Render** | $0-14 | $0 | $0 | **$0-14/month** |
+| **DigitalOcean** | $21 | $0 | $0 | **$21/month** |
+| **AWS** | $0 (12mo) | $0 | $0 | **$0/month** |
+| **Docker** | Varies | $0 | $0 | **Varies** |
 
 ---
 
@@ -1161,17 +1454,44 @@ For deployment issues:
 
 After successful deployment:
 
+### Core Functionality
 - [ ] Verify all API endpoints work
 - [ ] Test AI features (improve, analyze, generate, suggest)
+- [ ] Test certificate generation with Arabic text
+- [ ] Verify PDF displays Arabic correctly
+
+### User Management
 - [ ] Create initial admin account
+- [ ] Test admin user management endpoints
+- [ ] Verify admin can create users
+- [ ] Test suspend/activate functionality
+- [ ] Test password reset
+
+### Provider Workflow
 - [ ] Configure university email domains
 - [ ] Test provider approval workflow
 - [ ] Verify email notifications work
 - [ ] Test file uploads (CV, certificates)
+
+### Multilingual Support
+- [ ] Test Arabic responses
+- [ ] Test English responses
+- [ ] Verify language switching works
+- [ ] Test user language preference
+- [ ] Verify all translation categories
+
+### Security & Monitoring
 - [ ] Check SSL certificate
 - [ ] Monitor logs for errors
 - [ ] Set up backups
 - [ ] Configure rate limiting
+- [ ] Test security headers
+
+### Performance
+- [ ] Run all tests: `php artisan test`
+- [ ] Verify 227+ tests pass
+- [ ] Check response times
+- [ ] Monitor AI API usage
 
 ---
 
@@ -1182,5 +1502,7 @@ After successful deployment:
 **Made with ❤️ by Trinova Team**
 
 **Powered by Groq AI 🤖**
+
+**Supports: العربية 🇸🇦 | English 🇬🇧**
 
 </div>

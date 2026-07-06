@@ -114,9 +114,9 @@ class AuthController extends Controller
 
      // ✅ تحديد رسالة التسجيل المناسبة بناءً على حالة الحساب
 if ($accountStatus === 'pending_review') {
-    $message = 'تم التسجيل بنجاح. يرجى التحقق من بريدك الإلكتروني أولاً، ثم سيتم مراجعة حسابك من قبل الإدارة. سيتم إعلامك بالبريد عند الموافقة.';
+    $message = __('messages.auth.register_pending');
 } else {
-    $message = 'تم التسجيل بنجاح. يرجى التحقق من بريدك الإلكتروني.';
+    $message = __('messages.auth.register_success');
 }
         return response()->json([
             'message' => $message,
@@ -137,13 +137,13 @@ if ($accountStatus === 'pending_review') {
         $user = User::where('email', $request->email)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
-            return response()->json(['message' => 'بيانات الدخول غير صحيحة'], 401);
+            return response()->json(['message' => __('messages.auth.invalid_credentials')], 401);
         }
 
         // ✅ التحقق من توثيق البريد الإلكتروني
         if (!$user->hasVerifiedEmail()) {
             return response()->json([
-                'message' => 'يرجى التحقق من بريدك الإلكتروني أولاً',
+                'message' => __('messages.auth.email_not_verified'),
                 'email_verification_required' => true,
             ], 403);
         }
@@ -151,14 +151,14 @@ if ($accountStatus === 'pending_review') {
         // ✅ التحقق من حالة الحساب
         if ($user->account_status === 'pending_review') {
             return response()->json([
-                'message' => 'حسابك قيد المراجعة من قبل الإدارة. سيتم إعلامك عند الموافقة.',
+                'message' => __('messages.auth.account_pending_review'),
                 'account_status' => 'pending_review',
             ], 403);
         }
 
         if ($user->account_status === 'rejected') {
             return response()->json([
-                'message' => 'تم رفض حسابك. ' . ($user->rejection_reason ?? ''),
+                'message' => __('messages.auth.account_rejected') . ($user->rejection_reason ?? ''),
                 'account_status' => 'rejected',
                 'rejection_reason' => $user->rejection_reason,
             ], 403);
@@ -166,7 +166,7 @@ if ($accountStatus === 'pending_review') {
 
         if ($user->account_status === 'suspended') {
             return response()->json([
-                'message' => 'حسابك معلق. يرجى التواصل مع الإدارة.',
+                'message' => __('messages.auth.account_suspended'),
                 'account_status' => 'suspended',
             ], 403);
         }
@@ -180,7 +180,7 @@ if ($accountStatus === 'pending_review') {
         }
 
         return response()->json([
-            'message' => 'تم تسجيل الدخول بنجاح',
+            'message' => __('messages.auth.login_success'),
             'token' => $token,
             'user' => $userData,
             'email_verified' => true,
@@ -190,7 +190,7 @@ if ($accountStatus === 'pending_review') {
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
-        return response()->json(['message' => 'تم تسجيل الخروج بنجاح']);
+        return response()->json(['message' => __('messages.auth.logout_success')]);
     }
 
     public function profile(Request $request)
@@ -217,7 +217,7 @@ if ($accountStatus === 'pending_review') {
         // ✅ التحقق من وجود provider record
         if (!$provider) {
             return response()->json([
-                'message' => 'بيانات المزود غير مكتملة'
+                'message' => __('messages.auth.incomplete_provider_data')
             ], 400);
         }
 
@@ -231,7 +231,7 @@ if ($accountStatus === 'pending_review') {
 
         if (!$application) {
             return response()->json([
-                'message' => 'لا توجد بيانات تقديم لهذا الطالب لدى مؤسستك'
+                'message' => __('messages.application.no_application_found')
             ], 404);
         }
 

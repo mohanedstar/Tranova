@@ -2,13 +2,14 @@
 
 <div align="center">
 
-**A comprehensive platform for managing student internships with AI-powered features**
+**A comprehensive platform for managing student internships with AI-powered features, multilingual support, and professional certificate generation**
 
-![Laravel](https://img.shields.io/badge/Laravel-11-FF2D20?logo=laravel)
-![PHP](https://img.shields.io/badge/PHP-8.3-777BB4?logo=php)
+![Laravel](https://img.shields.io/badge/Laravel-12-FF2D20?logo=laravel)
+![PHP](https://img.shields.io/badge/PHP-8.2-777BB4?logo=php)
 ![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?logo=mysql)
-![Tests](https://img.shields.io/badge/Tests-165+-4CAF50)
+![Tests](https://img.shields.io/badge/Tests-227+-4CAF50)
 ![AI](https://img.shields.io/badge/AI-Groq%20LLM-FF6B35)
+![Languages](https://img.shields.io/badge/Languages-Arabic%20%7C%20English-007ACC)
 ![Security](https://img.shields.io/badge/Security-RBAC%20%2B%20Admin%20Review-00C853)
 
 </div>
@@ -20,8 +21,11 @@
 - [Project Overview](#-project-overview)
 - [Features](#-features)
 - [AI-Powered Features](#-ai-powered-features)
+- [Multilingual Support](#-multilingual-support)
 - [Admin Review System](#-admin-review-system)
+- [Admin User Management](#-admin-user-management)
 - [University Email Validation](#-university-email-validation)
+- [Professional Certificates](#-professional-certificates)
 - [Tech Stack](#-tech-stack)
 - [Installation](#-installation)
 - [API Documentation](#-api-documentation)
@@ -34,10 +38,10 @@
 
 **Trinova** is a modern platform designed to streamline the management of student internships by connecting:
 
-- 🎓 **Students** - Find and apply for opportunities, submit reports, view evaluations
-- 🏢 **Providers** - Offer training positions, review applications, evaluate students
+- 🎓 **Students** - Find and apply for opportunities, submit reports, view evaluations, get AI-powered writing assistance
+- 🏢 **Providers** - Offer training positions, review applications, evaluate students (requires admin approval)
 - 👨‍🏫 **Supervisors** - Monitor student progress, review reports, academic evaluations
-- 🛡️ **Admins** - Manage the entire system, approve providers, generate certificates
+- 🛡️ **Admins** - Full system management, approve providers, manage all users, generate certificates
 
 ---
 
@@ -53,6 +57,7 @@
 - **University email validation for supervisors**
 - Rate limiting on sensitive endpoints
 - XSS and SQL injection protection
+- **Dynamic language detection per user**
 
 ### 👥 User Roles
 
@@ -61,7 +66,7 @@
 | **Student** | Apply, submit reports, view evaluations, download certificates | Any email allowed |
 | **Provider** | Create opportunities, review applications, evaluate students | **Requires admin approval** |
 | **Supervisor** | Monitor students, review reports, academic evaluations | **University email required** |
-| **Admin** | Full system management, approve providers, generate certificates | - |
+| **Admin** | Full system management, approve providers, manage all users | - |
 
 ### 💼 Core Features
 
@@ -69,12 +74,13 @@
 - 📄 Application submission with CV upload
 - 📊 Weekly reports tracking with file attachments
 - ⭐ Multi-criteria evaluation system (Provider + Supervisor)
-- 🏆 Professional PDF certificates (English)
+- 🏆 Professional PDF certificates (English with full Arabic support)
 - 🔔 Real-time notifications system
 - 💬 Internal messaging system
 - 👤 **Applicant profile viewing** (for providers)
 - ⏰ **Late students identification** (for supervisors)
 - 📈 Final grade calculation system
+- 🎯 **Final evaluation records management**
 
 ---
 
@@ -91,11 +97,12 @@ Trinova integrates advanced AI capabilities using **Groq LLM** to help students 
 | **Generate Report** | Create full report from bullet points | `POST /api/student/ai/reports/generate` |
 | **Smart Suggestions** | Get topic suggestions based on major and week | `POST /api/student/ai/reports/suggest` |
 
-### 🌍 Language Support
+### 🌍 Language Support (AI)
 
 - ✅ **Automatic language detection** (Arabic/English)
 - ✅ Responds in the same language as the input
 - ✅ Supports mixed-language content
+- ✅ Context-aware professional terminology
 
 ### 📊 AI Response Examples
 
@@ -105,7 +112,8 @@ Trinova integrates advanced AI capabilities using **Groq LLM** to help students 
 {
     "original_content": "تعلمت Laravel اليوم",
     "improved_content": "خلال هذا اليوم، ركزت على تطوير مهاراتي في إطار عمل Laravel...",
-    "detected_language": "arabic"
+    "detected_language": "arabic",
+    "ai_model": "llama-3.3-70b-versatile"
 }
 ```
 
@@ -117,7 +125,13 @@ Trinova integrates advanced AI capabilities using **Groq LLM** to help students 
     "grade": "good",
     "strengths": ["محتوى جيد", "تنظيم واضح"],
     "weaknesses": ["يحتاج أمثلة عملية"],
-    "improvements": ["أضف تفاصيل تقنية"]
+    "improvements": ["أضف تفاصيل تقنية"],
+    "criteria_scores": {
+        "content_quality": 85,
+        "structure": 80,
+        "language": 90,
+        "professionalism": 85
+    }
 }
 ```
 
@@ -126,19 +140,93 @@ Trinova integrates advanced AI capabilities using **Groq LLM** to help students 
 ```json
 {
     "input_points": ["تعلمت Laravel", "عملت على database"],
-    "generated_report": "خلال هذا الأسبوع، ركزت على..."
+    "generated_report": "خلال هذا الأسبوع، ركزت على...",
+    "report_statistics": {
+        "word_count": 85,
+        "sentence_count": 5,
+        "estimated_reading_time_minutes": 1
+    }
 }
 ```
 
-**Smart Suggestions:**
+---
+
+## 🌍 Multilingual Support
+
+Trinova provides **dynamic language support** that adapts to each user's preference:
+
+### 🎯 Language Detection Priority
+
+| Priority | Source | Example |
+|----------|--------|---------|
+| 1️⃣ | Query Parameter | `?lang=ar` |
+| 2️⃣ | Custom Header | `X-Language: en` |
+| 3️⃣ | User Preference | `preferred_language` in database |
+| 4️⃣ | Accept-Language Header | `Accept-Language: ar,en;q=0.9` |
+| 5️⃣ | Default from .env | `APP_LOCALE=ar` |
+
+### 🛠️ Implementation
+
+- **Custom Middleware:** `SetLocale` - Automatically detects and applies the correct language
+- **User Preferences:** Stored in `users.preferred_language` field
+- **User Endpoint:** `POST /api/user/language` - Change language preference
+- **Language Files:** Organized in `lang/ar/` and `lang/en/`
+- **Translation Helper:** `__('messages.key')` throughout the codebase
+
+### 🎨 Custom Artisan Commands
+
+```bash
+# Scan project for Arabic texts
+php artisan lang:scan --path=app
+
+# Preview translation changes
+php artisan lang:preview --controller=AuthController.php
+
+# Apply translations with backup
+php artisan lang:replace --backup --force
+
+# Generate translation keys
+php artisan lang:generate --path=app
+```
+
+### 🌐 Example Usage
+
+**Change user's language:**
+
+```http
+POST http://127.0.0.1:8000/api/user/language
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+    "language": "en"
+}
+```
+
+**Response:**
 
 ```json
 {
-    "suggested_topics": ["تطوير APIs", "إدارة قواعد البيانات"],
-    "suggested_tasks": ["بناء نموذج Student", "كتابة اختبارات"],
-    "suggested_challenges": ["فهم العلاقات المعقدة"]
+    "success": true,
+    "message": "Language updated successfully",
+    "language": "en"
 }
 ```
+
+### 📚 Supported Messages Categories
+
+- ✅ **auth** - Authentication messages (login, register, etc.)
+- ✅ **validation** - Validation error messages
+- ✅ **opportunity** - Opportunity-related messages
+- ✅ **application** - Application workflow messages
+- ✅ **report** - Weekly report messages
+- ✅ **evaluation** - Evaluation messages
+- ✅ **message** - Messaging system messages
+- ✅ **notification** - Notification messages
+- ✅ **ai** - AI feature messages
+- ✅ **admin** - Admin management messages
+- ✅ **certificate** - Certificate messages
+- ✅ **general** - General system messages
 
 ---
 
@@ -165,21 +253,100 @@ Trinova integrates advanced AI capabilities using **Groq LLM** to help students 
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  1️⃣ تسجيل مزود جديد                                     │
+│  1️⃣ Provider registers                                   │
 │     ↓                                                   │
 │  2️⃣ account_status = 'pending_review'                   │
 │     ↓                                                   │
-│  3️⃣ محاولة تسجيل الدخول → ❌ 403 Forbidden              │
-│     "حسابك قيد المراجعة من قبل الإدارة"                 │
+│  3️⃣ Login attempt → ❌ 403 Forbidden                    │
+│     "Your account is pending admin review"              │
 │     ↓                                                   │
-│  4️⃣ المدير يوافق على الحساب                             │
+│  4️⃣ Admin approves account                              │
 │     ↓                                                   │
 │  5️⃣ account_status = 'active'                           │
 │     ↓                                                   │
-│  6️⃣ تسجيل الدخول → ✅ 200 OK                           │
+│  6️⃣ Login → ✅ 200 OK                                   │
 │     ↓                                                   │
-│  7️⃣ نشر فرص تدريبية → ✅ 201 Created                   │
+│  7️⃣ Publish opportunities → ✅ 201 Created              │
 └─────────────────────────────────────────────────────────┘
+```
+
+### Default Account Status by Role
+
+| Role | Default Status | Requires Approval? |
+|------|----------------|-------------------|
+| **Student** | `active` | ❌ No |
+| **Provider** | `pending_review` | ✅ Yes |
+| **Supervisor** | `active` | ❌ No (university email verified) |
+| **Admin** | `active` | ❌ No |
+
+---
+
+## 👨‍💼 Admin User Management
+
+Admins have full control over all users in the system:
+
+### 🔧 User Management Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/admin/users` | List all users (with filters) |
+| GET | `/api/admin/users/{id}` | View user details |
+| POST | `/api/admin/users` | Create new user |
+| PUT | `/api/admin/users/{id}` | Update user |
+| DELETE | `/api/admin/users/{id}` | Delete user |
+| POST | `/api/admin/users/{id}/suspend` | Suspend user account |
+| POST | `/api/admin/users/{id}/activate` | Activate user account |
+| POST | `/api/admin/users/{id}/reset-password` | Reset user password |
+
+### 🎯 Features
+
+- **Create users** with any role (student, provider, supervisor, admin)
+- **Search & filter** by role, status, name, email
+- **Suspend accounts** - Prevent login without deletion
+- **Activate accounts** - Restore suspended accounts
+- **Reset passwords** - Force password change (invalidates all tokens)
+- **Self-protection** - Cannot delete/suspend own account
+- **Cascade deletion** - Automatically removes related records
+
+### 📋 Example: Create Student
+
+```http
+POST http://127.0.0.1:8000/api/admin/users
+Authorization: Bearer {admin_token}
+Content-Type: application/json
+
+{
+    "name": "Ahmed Mohamed",
+    "email": "ahmed@university.edu",
+    "password": "password123",
+    "phone": "0591234567",
+    "role": "student",
+    "student_id": "20240999",
+    "major": "IT",
+    "university": "Islamic University",
+    "year_of_study": "3"
+}
+```
+
+### 📋 Example: Suspend User
+
+```http
+POST http://127.0.0.1:8000/api/admin/users/5/suspend
+Authorization: Bearer {admin_token}
+```
+
+**Response:**
+
+```json
+{
+    "success": true,
+    "message": "User account suspended",
+    "data": {
+        "id": 5,
+        "name": "John Doe",
+        "account_status": "suspended"
+    }
+}
 ```
 
 ---
@@ -211,15 +378,6 @@ Supervisors must register with approved university email domains:
 
 Response: `422 Unprocessable Entity`
 
-```json
-{
-    "message": "يجب استخدام بريد إلكتروني جامعي رسمي",
-    "errors": {
-        "email": ["The email must be a valid university email domain."]
-    }
-}
-```
-
 **✅ Accepted:**
 
 ```json
@@ -231,19 +389,79 @@ Response: `422 Unprocessable Entity`
 
 Response: `201 Created` ✅
 
+### Custom Validation Rule
+
+- **Rule:** `UniversityEmail` (in `app/Rules/`)
+- **Configuration:** `config/universities.php`
+- **Strict mode:** Rejects non-university emails automatically
+
+---
+
+## 🏆 Professional Certificates
+
+### ✨ Certificate Features
+
+- **Professional Design** - A4 landscape with elegant borders
+- **Full Arabic Support** - Using DejaVu Sans font
+- **Student Information** - Name, ID, Major, University, Year
+- **Training Details** - Opportunity title, provider, dates, hours
+- **Grade Display** - Final grade with status (Excellent/Very Good/Good/Pass/Fail)
+- **Unique Certificate Number** - Format: `TRN-{year}-{sequence}-{random}`
+- **Digital Verification** - Certificate number can be verified online
+- **Signatures** - Training provider and academic supervisor
+
+### 📄 Certificate Content
+
+```
+TRINOVA PLATFORM
+Certificate of Internship Completion
+
+This is to certify that
+[Ahmed Mohamed]
+Student ID: 20240001 | Major: IT | University: Islamic University
+
+has successfully completed the internship program in
+"Laravel Backend"
+at Tech Corp
+during the period from 2026/07/03 to 2026/10/03
+with a total of 60 training hours
+
+Final Grade: 89.46 / 100 - Very Good
+```
+
+### 🎨 Certificate Design Elements
+
+- **Gold Border** (`#c9a961`) - Professional accent
+- **Navy Blue** (`#1e3a5f`) - Brand color
+- **Black Text** (`#000000`) - Clear readability
+- **DejaVu Sans Font** - Full Arabic/English support
+- **QR Code Placeholder** - For future verification
+
+### 🔧 Certificate Endpoints
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /api/student/certificates` | List student's certificates |
+| `GET /api/student/certificates/download` | Download as PDF |
+| `GET /api/student/certificates/preview` | Preview in browser |
+| `GET /api/admin/certificates` | List all certificates (admin) |
+| `POST /api/admin/records/{id}/generate-certificate` | Generate certificate |
+| `GET /api/admin/students/{id}/certificate` | Download specific certificate |
+
 ---
 
 ## 🛠️ Tech Stack
 
 ### Backend
 
-- **Framework:** Laravel 11
-- **Language:** PHP 8.3
+- **Framework:** Laravel 12
+- **Language:** PHP 8.2
 - **Database:** MySQL 8.0
 - **Authentication:** Laravel Sanctum
-- **PDF Generation:** DomPDF
-- **Testing:** Pest PHP (165+ tests)
+- **PDF Generation:** DomPDF with DejaVu Sans font
+- **Testing:** Pest PHP (227+ tests)
 - **AI Integration:** Groq API (Llama 3.3)
+- **Multilingual:** Custom SetLocale middleware + translation files
 
 ### AI & External Services
 
@@ -251,13 +469,33 @@ Response: `201 Created` ✅
 - **Model:** Llama 3.3 70B Versatile
 - **Fallback:** Google Gemini API (optional)
 
+### Key Components
+
+| Component | Purpose |
+|-----------|---------|
+| `SetLocale` Middleware | Dynamic language detection per request |
+| `LanguageMapper` Service | Arabic ↔ Translation keys mapping |
+| `CertificateService` | Professional PDF generation |
+| `UniversityEmail` Rule | Supervisor email validation |
+| `CheckRole` Middleware | Role-based access control |
+| `GeminiService` | AI integration with Groq/Gemini |
+
+### Custom Artisan Commands
+
+| Command | Purpose |
+|---------|---------|
+| `lang:scan` | Scan project for Arabic texts |
+| `lang:preview` | Preview translation changes |
+| `lang:replace` | Apply translations safely |
+| `lang:generate` | Generate translation keys |
+
 ---
 
 ## 📦 Installation
 
 ### Prerequisites
 
-- PHP >= 8.3
+- PHP >= 8.2
 - Composer
 - MySQL >= 8.0
 - Groq API Key (free from [console.groq.com](https://console.groq.com))
@@ -282,21 +520,55 @@ DB_USERNAME=root
 DB_PASSWORD=your_password
 
 # 5. Configure AI (Groq)
+AI_PROVIDER=groq
 GROQ_API_KEY=your_groq_api_key_here
 GROQ_MODEL=llama-3.3-70b-versatile
 
-# 6. Run migrations
+# 6. Configure Language
+APP_LOCALE=ar
+APP_FALLBACK_LOCALE=en
+APP_SUPPORTED_LOCALES=en,ar
+
+# 7. Run migrations
 php artisan migrate
 php artisan db:seed
 
-# 7. Create storage link
+# 8. Create storage link
 php artisan storage:link
 
-# 8. Start server
+# 9. Start server
 php artisan serve
 ```
 
 Visit: `http://127.0.0.1:8000`
+
+### 📝 Environment Variables Reference
+
+```env
+# Application
+APP_NAME=Trinova
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=http://localhost:8000
+
+# Language
+APP_LOCALE=ar
+APP_FALLBACK_LOCALE=en
+APP_SUPPORTED_LOCALES=en,ar
+
+# AI
+AI_PROVIDER=groq
+GROQ_API_KEY=your_groq_api_key
+GROQ_MODEL=llama-3.3-70b-versatile
+
+# Database
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=trinova
+DB_USERNAME=root
+DB_PASSWORD=your_password
+```
 
 ---
 
@@ -314,6 +586,13 @@ http://127.0.0.1:8000/api
 Authorization: Bearer {token}
 ```
 
+### Language Header (Optional)
+
+```
+X-Language: en
+Accept-Language: ar,en;q=0.9
+```
+
 ### Main Endpoints
 
 #### 🔐 Authentication
@@ -322,11 +601,13 @@ Authorization: Bearer {token}
 - `POST /api/login` - Login
 - `POST /api/logout` - Logout
 - `GET /api/profile` - Get profile
+- `POST /api/user/language` - Change language preference
 
 #### 📧 Email Verification
 
 - `GET /api/email/verify/{id}/{hash}` - Verify email
 - `POST /api/email/resend` - Resend verification
+- `GET /api/email/verify-notice` - Verification notice
 
 #### 💼 Opportunities
 
@@ -369,6 +650,7 @@ Authorization: Bearer {token}
 - `GET /api/student/certificates/preview` - Preview certificate
 - `GET /api/admin/certificates` - List all certificates (admin)
 - `POST /api/admin/records/{id}/generate-certificate` - Generate certificate
+- `GET /api/admin/students/{id}/certificate` - Download specific certificate
 
 #### 🔔 Notifications
 
@@ -377,6 +659,7 @@ Authorization: Bearer {token}
 - `POST /api/notifications/{id}/read` - Mark as read
 - `POST /api/notifications/read-all` - Mark all as read
 - `DELETE /api/notifications/{id}` - Delete notification
+- `DELETE /api/notifications` - Clear all notifications
 
 #### 💬 Messages
 
@@ -392,12 +675,26 @@ Authorization: Bearer {token}
 - `POST /api/student/ai/reports/generate` - Generate from points
 - `POST /api/student/ai/reports/suggest` - Get smart suggestions
 
-#### 🛡️ Admin Management
+#### 🛡️ Admin Provider Management
 
 - `GET /api/admin/providers` - List all providers
 - `GET /api/admin/providers/pending` - List pending providers
 - `POST /api/admin/providers/{id}/approve` - Approve provider
 - `POST /api/admin/providers/{id}/reject` - Reject provider
+
+#### 👨‍💼 Admin User Management (NEW)
+
+- `GET /api/admin/users` - List all users (with filters: role, status, search)
+- `GET /api/admin/users/{id}` - View user details
+- `POST /api/admin/users` - Create new user (any role)
+- `PUT /api/admin/users/{id}` - Update user
+- `DELETE /api/admin/users/{id}` - Delete user
+- `POST /api/admin/users/{id}/suspend` - Suspend user account
+- `POST /api/admin/users/{id}/activate` - Activate user account
+- `POST /api/admin/users/{id}/reset-password` - Reset user password
+
+#### 🔧 Admin System
+
 - `GET /api/admin/students` - List all students
 - `GET /api/admin/supervisors` - List all supervisors
 - `POST /api/admin/assign-supervisor` - Assign supervisor to student
@@ -416,12 +713,25 @@ Authorization: Bearer {token}
 php artisan test
 ```
 
+### Run Specific Test Suites
+
+```bash
+# Admin user management tests
+php artisan test tests/Feature/AdminUserControllerTest.php
+
+# Admin provider management tests
+php artisan test tests/Feature/AdminProviderControllerTest.php
+
+# AI features tests
+php artisan test tests/Feature/AIReportTest.php
+```
+
 ### Test Coverage
 
 | Category | Tests | Status |
 |----------|-------|--------|
 | Unit Tests | 6 | ✅ |
-| Authentication | 4 | ✅ |
+| Authentication | 8 | ✅ |
 | Opportunities | 9 | ✅ |
 | Role Permissions | 21 | ✅ |
 | Weekly Reports | 9 | ✅ |
@@ -432,12 +742,18 @@ php artisan test
 | Password Reset | 11 | ✅ |
 | Email Verification | 19 | ✅ |
 | Admin Provider Review | 11 | ✅ |
+| **Admin User Management** | **51** | ✅ **NEW** |
+| **Admin Provider Management** | **14** | ✅ **NEW** |
 | Applicant Profile | 5 | ✅ |
 | Late Students | 5 | ✅ |
 | Reopen Opportunity | 5 | ✅ |
 | University Email Validation | 5 | ✅ |
-| AI Report Features | 33 | ✅ |
-| **Total** | **165+** | ✅ **All Passing** |
+| AI Report Features | 35 | ✅ |
+| **Total** | **227+** | ✅ **All Passing** |
+
+### 🧪 Test Environment Configuration
+
+Tests run with `APP_LOCALE=ar` by default (configured in `phpunit.xml`). The `SetLocale` middleware is disabled in testing environment to ensure consistent results.
 
 ### AI Features Testing
 
@@ -447,6 +763,21 @@ The AI tests use **Mockery** to mock the Groq API, ensuring:
 - ✅ No API costs during testing
 - ✅ Reliable and deterministic results
 - ✅ Coverage of all edge cases
+
+### Admin User Management Testing
+
+Comprehensive test coverage includes:
+
+- ✅ List all users with filters
+- ✅ View user details
+- ✅ Create users (student, provider, supervisor, admin)
+- ✅ Update user information
+- ✅ Delete users (with cascade deletion)
+- ✅ Suspend/activate accounts
+- ✅ Reset passwords (invalidate all tokens)
+- ✅ Role-based access control
+- ✅ Self-protection (cannot delete/suspend own account)
+- ✅ Integration workflow tests
 
 ---
 
@@ -462,12 +793,36 @@ The AI tests use **Mockery** to mock the Groq API, ensuring:
    - **Start Command:** `php artisan serve --host=0.0.0.0 --port=$PORT`
 5. Add environment variables:
    - `APP_KEY`
+   - `APP_LOCALE=ar`
+   - `APP_SUPPORTED_LOCALES=en,ar`
    - `DB_*` (database credentials)
    - `GROQ_API_KEY` (for AI features)
    - `GROQ_MODEL=llama-3.3-70b-versatile`
 6. Click **Create Web Service**
 
+### Environment Variables for Production
+
+```env
+APP_LOCALE=ar
+APP_FALLBACK_LOCALE=en
+APP_SUPPORTED_LOCALES=en,ar
+AI_PROVIDER=groq
+GROQ_API_KEY=your_production_groq_key
+GROQ_MODEL=llama-3.3-70b-versatile
+```
+
 📖 **Full Deployment Guide:** [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
+
+---
+
+## 📚 Documentation
+
+The project includes comprehensive documentation:
+
+- 📖 **[docs/API.md](docs/API.md)** - Complete API reference
+- 🎨 **[docs/FRONTEND.md](docs/FRONTEND.md)** - Frontend integration guide
+- 🚀 **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** - Deployment guide
+- 📊 **[docs/PROJECT_SUMMARY.md](docs/PROJECT_SUMMARY.md)** - Project overview
 
 ---
 
@@ -485,8 +840,12 @@ This project is proprietary and confidential.
 
 <div align="center">
 
+**📖 Back to [README.md](README.md)**
+
 **Made with ❤️ In TaqaT**
 
 **Powered by Groq AI 🤖**
+
+**Supports: العربية 🇸🇦 | English 🇬🇧**
 
 </div>

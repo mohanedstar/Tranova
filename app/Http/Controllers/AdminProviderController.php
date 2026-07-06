@@ -54,14 +54,14 @@ class AdminProviderController extends Controller
         if (!$provider) {
             return response()->json([
                 'success' => false,
-                'message' => 'المزود غير موجود',
+                'message' => __('messages.admin.provider_not_found'),
             ], 404);
         }
 
         if ($provider->account_status === 'active') {
             return response()->json([
                 'success' => false,
-                'message' => 'الحساب موثق بالفعل',
+                'message' => __('messages.admin.already_approved'),
             ], 400);
         }
 
@@ -72,7 +72,7 @@ class AdminProviderController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'تمت الموافقة على حساب المزود بنجاح',
+            'message' => __('messages.admin.provider_approved'),
         ]);
     }
 
@@ -92,7 +92,7 @@ class AdminProviderController extends Controller
         if (!$provider) {
             return response()->json([
                 'success' => false,
-                'message' => 'المزود غير موجود',
+                'message' => __('messages.admin.provider_not_found'),
             ], 404);
         }
 
@@ -103,7 +103,7 @@ class AdminProviderController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'تم رفض حساب المزود',
+            'message' => __('messages.admin.provider_rejected'),
         ]);
     }
 

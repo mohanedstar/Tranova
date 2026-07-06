@@ -42,7 +42,7 @@ class PasswordResetController extends Controller
         $user->notify(new ResetPasswordNotification($token, $email));
 
         return response()->json([
-            'message' => 'تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني',
+            'message' => __('messages.auth.password_reset_sent'),
             // ⚠️ احذف هذا السطر في الإنتاج! (موجود للاختبار فقط)
             'token' => $token,
         ], 200);
@@ -58,13 +58,13 @@ class PasswordResetController extends Controller
 
         if (!$resetRecord) {
             return response()->json([
-                'message' => 'التوكن غير صالح أو منتهي الصلاحية',
+                'message' => __('messages.auth.token_invalid'),
                 'valid' => false,
             ], 400);
         }
 
         return response()->json([
-            'message' => 'التوكن صالح',
+            'message' => __('messages.auth.token_valid'),
             'valid' => true,
         ], 200);
     }
@@ -81,7 +81,7 @@ class PasswordResetController extends Controller
 
         if (!$resetRecord) {
             return response()->json([
-                'message' => 'التوكن غير صالح أو منتهي الصلاحية',
+                'message' => __('messages.auth.token_invalid'),
             ], 400);
         }
 
@@ -100,7 +100,7 @@ class PasswordResetController extends Controller
         $user->tokens()->delete();
 
         return response()->json([
-            'message' => 'تم إعادة تعيين كلمة المرور بنجاح',
+            'message' => __('messages.auth.password_reset_success'),
         ], 200);
     }
 

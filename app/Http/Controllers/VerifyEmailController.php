@@ -15,7 +15,7 @@ class VerifyEmailController extends Controller
     public function notice()
     {
         return response()->json([
-            'message' => 'يرجى التحقق من بريدك الإلكتروني. تم إرسال رابط التحقق إليك.',
+            'message' => __('messages.auth.verification_notice'),
         ]);
     }
 
@@ -27,7 +27,7 @@ class VerifyEmailController extends Controller
         // ✅ التحقق من صحة التوقيع
         if (!URL::hasValidSignature($request)) {
             return response()->json([
-                'message' => 'رابط التحقق غير صالح أو منتهي الصلاحية',
+                'message' => __('messages.auth.invalid_verification_link'),
             ], 403);
         }
 
@@ -36,21 +36,21 @@ class VerifyEmailController extends Controller
 
         if (!$user) {
             return response()->json([
-                'message' => 'المستخدم غير موجود',
+                'message' => __('messages.auth.user_not_found'),
             ], 404);
         }
 
         // ✅ التحقق من تطابق hash
         if (!hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
             return response()->json([
-                'message' => 'رابط التحقق غير صالح',
+                'message' => __('messages.auth.invalid_link'),
             ], 403);
         }
 
         // ✅ التحقق من أن البريد لم يُوثّق مسبقاً
         if ($user->hasVerifiedEmail()) {
             return response()->json([
-                'message' => 'البريد الإلكتروني موثق بالفعل',
+                'message' => __('messages.auth.already_verified'),
                 'verified' => true,
             ]);
         }
@@ -60,7 +60,7 @@ class VerifyEmailController extends Controller
         event(new Verified($user));
 
         return response()->json([
-            'message' => 'تم التحقق من بريدك الإلكتروني بنجاح!',
+            'message' => __('messages.auth.email_verified'),
             'verified' => true,
         ]);
     }
@@ -76,20 +76,20 @@ class VerifyEmailController extends Controller
         // ✅ التحقق من أن المستخدم مصادق عليه
         if (!$user) {
             return response()->json([
-                'message' => 'غير مصرح - يرجى تسجيل الدخول أولاً',
+                'message' => __('messages.general.unauthorized_login'),
             ], 401);
         }
 
         if ($user->hasVerifiedEmail()) {
             return response()->json([
-                'message' => 'بريدك الإلكتروني موثق بالفعل',
+                'message' => __('messages.auth.already_verified_message'),
             ]);
         }
 
         $user->sendEmailVerificationNotification();
 
         return response()->json([
-            'message' => 'تم إرسال رابط التحقق مرة أخرى',
+            'message' => __('messages.auth.verification_resent'),
         ]);
     }
 }

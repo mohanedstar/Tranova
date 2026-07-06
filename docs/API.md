@@ -2,12 +2,13 @@
 
 <div align="center">
 
-**Complete API Reference for Trinova Platform with AI-Powered Features**
+**Complete API Reference for Trinova Platform with AI-Powered Features & Multilingual Support**
 
 ![API](https://img.shields.io/badge/API-RESTful-4CAF50?style=flat-square)
 ![Auth](https://img.shields.io/badge/Auth-Sanctum-FF2D20?style=flat-square)
 ![Version](https://img.shields.io/badge/Version-1.0-007ACC?style=flat-square)
 ![AI](https://img.shields.io/badge/AI-Groq%20LLM-FF6B35?style=flat-square)
+![Languages](https://img.shields.io/badge/Languages-Arabic%20%7C%20English-007ACC?style=flat-square)
 ![Security](https://img.shields.io/badge/Security-RBAC%20%2B%20Admin%20Review-00C853?style=flat-square)
 
 </div>
@@ -18,6 +19,7 @@
 
 - [Base URL](#-base-url)
 - [Authentication](#-authentication)
+- [Multilingual Support](#-multilingual-support)
 - [Response Format](#-response-format)
 - [Authentication Endpoints](#-authentication-endpoints)
 - [Email Verification](#-email-verification)
@@ -31,6 +33,7 @@
 - [Messages](#-messages)
 - [AI Features](#-ai-features)
 - [Admin Management](#-admin-management)
+- [Admin User Management](#-admin-user-management)
 - [Error Responses](#-error-responses)
 - [Rate Limiting](#-rate-limiting)
 
@@ -71,6 +74,44 @@ Content-Type: application/json
 
 ---
 
+## 🌍 Multilingual Support
+
+Trinova supports **dynamic language detection** per request. The API automatically responds in the user's preferred language.
+
+### Language Detection Priority
+
+| Priority | Source | Example |
+|----------|--------|---------|
+| 1️⃣ | Query Parameter | `?lang=ar` |
+| 2️⃣ | Custom Header | `X-Language: en` |
+| 3️⃣ | User Preference | `preferred_language` in database |
+| 4️⃣ | Accept-Language Header | `Accept-Language: ar,en;q=0.9` |
+| 5️⃣ | Default from .env | `APP_LOCALE=ar` |
+
+### Supported Languages
+
+| Code | Language | Direction |
+|------|----------|-----------|
+| `ar` | العربية (Arabic) | RTL |
+| `en` | English | LTR |
+
+### Example: Request with Language Header
+
+```http
+GET /api/profile
+Authorization: Bearer {token}
+X-Language: en
+```
+
+### Example: Request with Query Parameter
+
+```http
+GET /api/profile?lang=ar
+Authorization: Bearer {token}
+```
+
+---
+
 ## 📦 Response Format
 
 ### Success Response
@@ -90,6 +131,24 @@ Content-Type: application/json
     "success": false,
     "message": "Error description",
     "errors": { ... }
+}
+```
+
+### Multilingual Response Example
+
+**Arabic (APP_LOCALE=ar):**
+```json
+{
+    "message": "تم تسجيل الدخول بنجاح",
+    "token": "1|abc123..."
+}
+```
+
+**English (APP_LOCALE=en):**
+```json
+{
+    "message": "Login successful",
+    "token": "1|abc123..."
 }
 ```
 
@@ -267,6 +326,15 @@ Content-Type: application/json
 }
 ```
 
+**Error Response (403) - Account suspended:**
+
+```json
+{
+    "message": "حسابك معلق. يرجى التواصل مع الإدارة.",
+    "account_status": "suspended"
+}
+```
+
 ---
 
 ### Logout
@@ -301,6 +369,7 @@ Content-Type: application/json
         "email": "john@example.com",
         "role": "student",
         "account_status": "active",
+        "preferred_language": "ar",
         "student": {
             "student_id": "20240001",
             "major": "IT",
@@ -308,6 +377,38 @@ Content-Type: application/json
         }
     },
     "email_verified": true
+}
+```
+
+---
+
+### Change User Language
+
+**Endpoint:** `POST /api/user/language`
+
+**Auth Required:** ✅ Yes
+
+**Description:** Change the user's preferred language. This preference will be used for all future requests.
+
+**Request Body:**
+
+```json
+{
+    "language": "en"
+}
+```
+
+**Validation:**
+- `language`: required, in: `ar`, `en`
+
+**Success Response (200):**
+
+```json
+{
+    "success": true,
+    "message": "تم تحديث اللغة بنجاح",
+    "language": "en",
+    "saved": true
 }
 ```
 
@@ -343,6 +444,14 @@ Content-Type: application/json
 ```json
 {
     "message": "تم إعادة إرسال رابط التحقق"
+}
+```
+
+**Error Response (200) - Email already verified:**
+
+```json
+{
+    "message": "بريدك الإلكتروني موثق بالفعل"
 }
 ```
 
@@ -410,6 +519,15 @@ Content-Type: application/json
 ```json
 {
     "valid": true
+}
+```
+
+**Error Response (400) - Invalid token:**
+
+```json
+{
+    "message": "التوكن غير صالح أو منتهي الصلاحية",
+    "valid": false
 }
 ```
 
@@ -1035,7 +1153,7 @@ Content-Type: multipart/form-data
 
 ```json
 {
-    "message": "Evaluation saved",
+    "message": "تم حفظ التقييم",
     "evaluation": { ... }
 }
 ```
@@ -1065,7 +1183,7 @@ Content-Type: multipart/form-data
 
 ```json
 {
-    "message": "Evaluation saved",
+    "message": "تم حفظ التقييم",
     "evaluation": { ... }
 }
 ```
@@ -1115,7 +1233,7 @@ Content-Type: multipart/form-data
 ```json
 {
     "success": true,
-    "message": "Final grade calculated successfully",
+    "message": "تم حساب التقييم النهائي وإنشاء السجل بنجاح",
     "record": {
         "student_id": 1,
         "opportunity_id": 1,
@@ -1195,7 +1313,7 @@ Content-Disposition: attachment; filename="certificate_1.pdf"
 ```json
 {
     "success": true,
-    "message": "Certificate issued successfully",
+    "message": "تم إصدار الشهادة بنجاح",
     "data": {
         "certificate_number": "TRN-2026-00001-ABCD",
         "file_path": "certificates/TRN-2026-00001-ABCD.pdf",
@@ -1283,7 +1401,7 @@ Content-Disposition: attachment; filename="certificate_1.pdf"
 
 ```json
 {
-    "message": "Notification marked as read"
+    "message": "تم تعليم الإشعار كمقروء"
 }
 ```
 
@@ -1299,7 +1417,7 @@ Content-Disposition: attachment; filename="certificate_1.pdf"
 
 ```json
 {
-    "message": "All notifications marked as read"
+    "message": "تم تعليم جميع الإشعارات كمقروءة"
 }
 ```
 
@@ -1311,6 +1429,14 @@ Content-Disposition: attachment; filename="certificate_1.pdf"
 
 **Auth Required:** ✅ Yes
 
+**Success Response (200):**
+
+```json
+{
+    "message": "تم حذف الإشعار"
+}
+```
+
 ---
 
 ### Delete All Notifications
@@ -1318,6 +1444,14 @@ Content-Disposition: attachment; filename="certificate_1.pdf"
 **Endpoint:** `DELETE /api/notifications`
 
 **Auth Required:** ✅ Yes
+
+**Success Response (200):**
+
+```json
+{
+    "message": "تم حذف جميع الإشعارات"
+}
+```
 
 ---
 
@@ -1345,7 +1479,8 @@ Content-Disposition: attachment; filename="certificate_1.pdf"
 ```json
 {
     "success": true,
-    "message": "Message sent successfully"
+    "message": "تم إرسال الرسالة",
+    "data": { ... }
 }
 ```
 
@@ -1394,6 +1529,14 @@ Content-Disposition: attachment; filename="certificate_1.pdf"
 **Endpoint:** `POST /api/messages/{id}/read`
 
 **Auth Required:** ✅ Yes (Receiver only)
+
+**Success Response (200):**
+
+```json
+{
+    "message": "تم التعليم كمقروءة"
+}
+```
 
 ---
 
@@ -1544,11 +1687,7 @@ Trinova integrates advanced AI capabilities using **Groq LLM** to help students 
     "success": true,
     "message": "تم توليد التقرير بنجاح باستخدام الذكاء الاصطناعي.",
     "data": {
-        "input_points": [
-            "تعلمت Laravel",
-            "عملت على database وقمت بتصميم الجداول",
-            "طورت API للطلاب باستخدام Laravel Sanctum"
-        ],
+        "input_points": [ ... ],
         "context": "الأسبوع الأول من التدريب في شركة تقنية",
         "generated_report": "خلال هذا الأسبوع، ركزت على تطوير مهاراتي في إطار عمل Laravel...",
         "detected_language": "arabic",
@@ -1600,41 +1739,12 @@ Trinova integrates advanced AI capabilities using **Groq LLM** to help students 
     "success": true,
     "message": "تم توليد الاقتراحات بنجاح باستخدام الذكاء الاصطناعي.",
     "data": {
-        "suggested_topics": [
-            "تطوير واجهات برمجة التطبيقات باستخدام Laravel",
-            "إدارة قواعد البيانات والعلاقات",
-            "المصادقة والتفويض باستخدام Sanctum",
-            "اختبار الوحدات باستخدام PHPUnit",
-            "نشر التطبيق على بيئة الإنتاج"
-        ],
-        "suggested_tasks": [
-            "إنشاء نموذج Student مع العلاقات",
-            "تطوير API للعمليات CRUD",
-            "تطبيق نظام المصادقة",
-            "كتابة اختبارات وحدة للـ Controllers",
-            "مراجعة كود الزملاء"
-        ],
-        "suggested_challenges": [
-            "فهم العلاقات المعقدة في Eloquent",
-            "التعامل مع الأخطاء في الـ APIs",
-            "كتابة اختبارات شاملة"
-        ],
-        "suggested_skills_learned": [
-            "تطوير RESTful APIs",
-            "إدارة قواعد البيانات العلائقية",
-            "المصادقة الآمنة",
-            "كتابة كود نظيف وقابل للصيانة"
-        ],
-        "writing_tips": [
-            "استخدم مصطلحات تقنية محددة",
-            "اذكر التحديات والحلول بوضوح",
-            "وثّق إنجازاتك بأرقام وإحصائيات"
-        ],
-        "example_bullet_points": [
-            "طورت نظام مصادقة كامل باستخدام Laravel Sanctum",
-            "أنشأت 5 APIs للعمليات CRUD على الطلاب",
-            "حللت مشكلة في العلاقات بين الجداول"
-        ],
+        "suggested_topics": [ ... ],
+        "suggested_tasks": [ ... ],
+        "suggested_challenges": [ ... ],
+        "suggested_skills_learned": [ ... ],
+        "writing_tips": [ ... ],
+        "example_bullet_points": [ ... ],
         "major": "تقنية المعلومات",
         "week_number": 3,
         "detected_language": "arabic",
@@ -1780,6 +1890,15 @@ Trinova integrates advanced AI capabilities using **Groq LLM** to help students 
 }
 ```
 
+**Success Response (201):**
+
+```json
+{
+    "message": "تم تعيين المشرف بنجاح",
+    "assignment": { ... }
+}
+```
+
 ---
 
 ### Approve Internship Record
@@ -1788,6 +1907,15 @@ Trinova integrates advanced AI capabilities using **Groq LLM** to help students 
 
 **Auth Required:** ✅ Yes (Admin only)
 
+**Success Response (200):**
+
+```json
+{
+    "message": "تم تحديث السجل",
+    "record": { ... }
+}
+```
+
 ---
 
 ### Get System Statistics
@@ -1795,6 +1923,19 @@ Trinova integrates advanced AI capabilities using **Groq LLM** to help students 
 **Endpoint:** `GET /api/admin/statistics`
 
 **Auth Required:** ✅ Yes (Admin only)
+
+**Success Response (200):**
+
+```json
+{
+    "total_students": 45,
+    "total_providers": 12,
+    "total_supervisors": 8,
+    "active_opportunities": 25,
+    "total_applications": 150,
+    "accepted_applications": 80
+}
+```
 
 ---
 
@@ -1814,13 +1955,386 @@ Trinova integrates advanced AI capabilities using **Groq LLM** to help students 
 
 ---
 
+## 👨‍💼 Admin User Management
+
+Admins have full control over all users in the system with these powerful management endpoints.
+
+### List All Users
+
+**Endpoint:** `GET /api/admin/users`
+
+**Auth Required:** ✅ Yes (Admin only)
+
+**Query Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `role` | string | Filter by role (student, provider, supervisor, admin) |
+| `status` | string | Filter by account_status (active, pending_review, suspended, rejected) |
+| `search` | string | Search by name or email |
+| `page` | integer | Page number |
+| `per_page` | integer | Items per page (default: 20) |
+
+**Success Response (200):**
+
+```json
+{
+    "success": true,
+    "data": {
+        "current_page": 1,
+        "data": [
+            {
+                "id": 1,
+                "name": "John Doe",
+                "email": "john@example.com",
+                "role": "student",
+                "account_status": "active",
+                "preferred_language": "ar",
+                "email_verified_at": "2026-07-01T10:00:00Z",
+                "created_at": "2026-07-01T10:00:00Z",
+                "student": { ... }
+            }
+        ],
+        "total": 45,
+        "per_page": 20,
+        "last_page": 3
+    }
+}
+```
+
+---
+
+### View User Details
+
+**Endpoint:** `GET /api/admin/users/{id}`
+
+**Auth Required:** ✅ Yes (Admin only)
+
+**Success Response (200):**
+
+```json
+{
+    "success": true,
+    "data": {
+        "id": 1,
+        "name": "John Doe",
+        "email": "john@example.com",
+        "phone": "+970591234567",
+        "role": "student",
+        "account_status": "active",
+        "preferred_language": "ar",
+        "email_verified_at": "2026-07-01T10:00:00Z",
+        "created_at": "2026-07-01T10:00:00Z",
+        "student": {
+            "student_id": "20240001",
+            "major": "IT",
+            "university": "Islamic University",
+            "year_of_study": "3"
+        }
+    }
+}
+```
+
+**Error Response (404) - User not found:**
+
+```json
+{
+    "message": "المسار غير موجود"
+}
+```
+
+---
+
+### Create New User
+
+**Endpoint:** `POST /api/admin/users`
+
+**Auth Required:** ✅ Yes (Admin only)
+
+**Description:** Create a new user with any role. Admin-created users are automatically verified.
+
+**Request Body (Student):**
+
+```json
+{
+    "name": "Ahmed Mohamed",
+    "email": "ahmed@university.edu",
+    "password": "password123",
+    "phone": "0591234567",
+    "role": "student",
+    "account_status": "active",
+    "student_id": "20240999",
+    "major": "IT",
+    "university": "Islamic University",
+    "year_of_study": "3"
+}
+```
+
+**Request Body (Provider):**
+
+```json
+{
+    "name": "Tech Corp",
+    "email": "hr@techcorp.com",
+    "password": "password123",
+    "role": "provider",
+    "account_status": "active",
+    "organization_name": "Tech Corporation",
+    "organization_type": "company",
+    "address": "Gaza City",
+    "city": "Gaza",
+    "country": "Palestine"
+}
+```
+
+**Request Body (Supervisor):**
+
+```json
+{
+    "name": "Dr. Sarah Ahmed",
+    "email": "sarah@iugaza.edu.ps",
+    "password": "password123",
+    "role": "supervisor",
+    "employee_id": "EMP999",
+    "department": "Computer Science",
+    "academic_title": "professor"
+}
+```
+
+**Request Body (Admin):**
+
+```json
+{
+    "name": "System Admin",
+    "email": "admin@trinova.com",
+    "password": "password123",
+    "role": "admin"
+}
+```
+
+**Validation:**
+
+| Field | Rules |
+|-------|-------|
+| `name` | required, string, max:255 |
+| `email` | required, email, unique:users |
+| `password` | required, string, min:8 |
+| `phone` | nullable, string, max:20 |
+| `role` | required, in:student,provider,supervisor,admin |
+| `account_status` | nullable, in:active,pending_review,suspended |
+
+**Success Response (201):**
+
+```json
+{
+    "success": true,
+    "message": "تم إنشاء المستخدم بنجاح",
+    "data": {
+        "id": 10,
+        "name": "Ahmed Mohamed",
+        "email": "ahmed@university.edu",
+        "role": "student",
+        "account_status": "active",
+        "student": {
+            "student_id": "20240999",
+            "major": "IT",
+            "university": "Islamic University"
+        }
+    }
+}
+```
+
+**Error Response (422) - Duplicate email:**
+
+```json
+{
+    "message": "Validation failed",
+    "errors": {
+        "email": ["The email has already been taken."]
+    }
+}
+```
+
+---
+
+### Update User
+
+**Endpoint:** `PUT /api/admin/users/{id}`
+
+**Auth Required:** ✅ Yes (Admin only)
+
+**Request Body:**
+
+```json
+{
+    "name": "Updated Name",
+    "email": "updated@example.com",
+    "phone": "0591234567"
+}
+```
+
+**Validation:**
+
+| Field | Rules |
+|-------|-------|
+| `name` | sometimes, string, max:255 |
+| `email` | sometimes, email, unique:users (ignore current) |
+| `phone` | nullable, string, max:20 |
+| `role` | sometimes, in:student,provider,supervisor,admin |
+
+**Success Response (200):**
+
+```json
+{
+    "success": true,
+    "message": "تم تحديث المستخدم بنجاح",
+    "data": { ... }
+}
+```
+
+---
+
+### Delete User
+
+**Endpoint:** `DELETE /api/admin/users/{id}`
+
+**Auth Required:** ✅ Yes (Admin only)
+
+**Description:** Permanently delete a user and all related records (student, provider, supervisor).
+
+**Success Response (200):**
+
+```json
+{
+    "success": true,
+    "message": "تم حذف المستخدم بنجاح"
+}
+```
+
+**Error Response (400) - Cannot delete self:**
+
+```json
+{
+    "success": false,
+    "message": "لا يمكنك حذف حسابك الخاص"
+}
+```
+
+**Note:** This action is irreversible and will delete all related records including:
+- Student/Provider/Supervisor records
+- Applications
+- Reports
+- Evaluations
+- Messages
+- Notifications
+- Authentication tokens
+
+---
+
+### Suspend User
+
+**Endpoint:** `POST /api/admin/users/{id}/suspend`
+
+**Auth Required:** ✅ Yes (Admin only)
+
+**Description:** Suspend a user account. Suspended users cannot login but their data is preserved.
+
+**Success Response (200):**
+
+```json
+{
+    "success": true,
+    "message": "تم تعليق حساب المستخدم",
+    "data": {
+        "id": 5,
+        "name": "John Doe",
+        "account_status": "suspended"
+    }
+}
+```
+
+**Error Response (400) - Cannot suspend self:**
+
+```json
+{
+    "success": false,
+    "message": "لا يمكنك تعليق حسابك الخاص"
+}
+```
+
+---
+
+### Activate User
+
+**Endpoint:** `POST /api/admin/users/{id}/activate`
+
+**Auth Required:** ✅ Yes (Admin only)
+
+**Description:** Activate a suspended or pending user account.
+
+**Success Response (200):**
+
+```json
+{
+    "success": true,
+    "message": "تم تفعيل حساب المستخدم",
+    "data": {
+        "id": 5,
+        "name": "John Doe",
+        "account_status": "active"
+    }
+}
+```
+
+---
+
+### Reset User Password
+
+**Endpoint:** `POST /api/admin/users/{id}/reset-password`
+
+**Auth Required:** ✅ Yes (Admin only)
+
+**Description:** Reset a user's password and invalidate all existing tokens.
+
+**Request Body:**
+
+```json
+{
+    "password": "newpassword123",
+    "password_confirmation": "newpassword123"
+}
+```
+
+**Validation:**
+
+| Field | Rules |
+|-------|-------|
+| `password` | required, string, min:8, confirmed |
+
+**Success Response (200):**
+
+```json
+{
+    "success": true,
+    "message": "تم إعادة تعيين كلمة المرور بنجاح"
+}
+```
+
+**Note:** This action will:
+- Update the user's password
+- Invalidate all existing authentication tokens
+- Force the user to login again
+
+---
+
 ## 🚨 Error Responses
 
 ### 401 Unauthorized
 
 ```json
 {
-    "message": "Unauthenticated"
+    "success": false,
+    "message": "غير مصرح - يرجى تسجيل الدخول أولاً"
 }
 ```
 
@@ -1828,7 +2342,8 @@ Trinova integrates advanced AI capabilities using **Groq LLM** to help students 
 
 ```json
 {
-    "message": "This action is unauthorized"
+    "success": false,
+    "message": "ليس لديك صلاحية للوصول إلى هذا المورد"
 }
 ```
 
@@ -1851,11 +2366,21 @@ Trinova integrates advanced AI capabilities using **Groq LLM** to help students 
 }
 ```
 
+### 403 Forbidden - Account Suspended
+
+```json
+{
+    "message": "حسابك معلق. يرجى التواصل مع الإدارة.",
+    "account_status": "suspended"
+}
+```
+
 ### 404 Not Found
 
 ```json
 {
-    "message": "Resource not found"
+    "success": false,
+    "message": "المسار غير موجود"
 }
 ```
 
@@ -1863,7 +2388,8 @@ Trinova integrates advanced AI capabilities using **Groq LLM** to help students 
 
 ```json
 {
-    "message": "Validation failed",
+    "success": false,
+    "message": "بيانات غير صالحة",
     "errors": {
         "email": ["The email field is required."],
         "password": ["The password must be at least 8 characters."]
@@ -1886,7 +2412,8 @@ Trinova integrates advanced AI capabilities using **Groq LLM** to help students 
 
 ```json
 {
-    "message": "Server error",
+    "success": false,
+    "message": "حدث خطأ في الخادم",
     "error": "Detailed error message (in debug mode only)"
 }
 ```
@@ -1918,6 +2445,8 @@ Trinova integrates advanced AI capabilities using **Groq LLM** to help students 
 8. **University email validation** for supervisors
 9. **Rate limiting** on all sensitive endpoints
 10. **XSS and SQL injection protection** via Laravel's built-in features
+11. **Self-protection** - Admins cannot delete/suspend themselves
+12. **Token invalidation** on password reset
 
 ---
 
@@ -1937,6 +2466,49 @@ To add more domains, edit `config/universities.php`.
 
 ---
 
+## 🌐 Multilingual API Usage
+
+### Example: Arabic Response
+
+```http
+GET /api/profile
+Authorization: Bearer {token}
+X-Language: ar
+```
+
+**Response:**
+```json
+{
+    "user": { ... },
+    "email_verified": true
+}
+```
+
+### Example: English Response
+
+```http
+GET /api/profile
+Authorization: Bearer {token}
+X-Language: en
+```
+
+**Response:**
+```json
+{
+    "user": { ... },
+    "email_verified": true
+}
+```
+
+### Example: Query Parameter
+
+```http
+GET /api/profile?lang=en
+Authorization: Bearer {token}
+```
+
+---
+
 <div align="center">
 
 **📖 Back to [README.md](../README.md)**
@@ -1944,5 +2516,7 @@ To add more domains, edit `config/universities.php`.
 **Made with ❤️ by Trinova Team**
 
 **Powered by Groq AI 🤖**
+
+**Supports: العربية 🇸🇦 | English 🇬🇧**
 
 </div>

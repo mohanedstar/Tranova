@@ -2,13 +2,14 @@
 
 <div align="center">
 
-**Complete guide for integrating Trinova API with your frontend application - including AI-powered features**
+**Complete guide for integrating Trinova API with your frontend application - including AI-powered features & Multilingual Support**
 
 ![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?style=flat-square&logo=javascript)
 ![React](https://img.shields.io/badge/React-Supported-61DAFB?style=flat-square&logo=react)
 ![Vue](https://img.shields.io/badge/Vue-Supported-4FC08D?style=flat-square&logo=vue.js)
 ![Axios](https://img.shields.io/badge/Axios-Supported-5A29E4?style=flat-square)
 ![AI](https://img.shields.io/badge/AI-Groq%20LLM-FF6B35?style=flat-square)
+![Languages](https://img.shields.io/badge/Languages-Arabic%20%7C%20English-007ACC?style=flat-square)
 
 </div>
 
@@ -20,6 +21,7 @@
 - [Base URL](#-base-url)
 - [Authentication Flow](#-authentication-flow)
 - [Making Authenticated Requests](#-making-authenticated-requests)
+- [Multilingual Support](#-multilingual-support)
 - [Example: Get Opportunities](#-example-get-opportunities)
 - [Example: Apply for Opportunity](#-example-apply-for-opportunity)
 - [Example: Submit Weekly Report](#-example-submit-weekly-report)
@@ -28,6 +30,7 @@
 - [Example: Send Message](#-example-send-message)
 - [AI-Powered Features](#-ai-powered-features)
 - [Admin Provider Management](#-admin-provider-management)
+- [Admin User Management](#-admin-user-management)
 - [React Integration](#-react-integration)
 - [Vue.js Integration](#-vuejs-integration)
 - [CORS Configuration](#-cors-configuration)
@@ -44,6 +47,7 @@ This guide helps frontend developers integrate with the Trinova API using JavaSc
 
 - 🔐 How to authenticate users (with admin review for providers)
 - 📡 How to make API requests
+- 🌍 How to implement multilingual support (Arabic/English)
 - 💼 How to handle opportunities and applications
 - 📊 How to submit reports and evaluations
 - 🏆 How to download certificates
@@ -51,6 +55,7 @@ This guide helps frontend developers integrate with the Trinova API using JavaSc
 - 💬 How to send messages
 - 🤖 How to use AI-powered report features
 - 🛡️ How to manage provider approvals (admin)
+- 👨‍💼 How to manage users (admin)
 
 ---
 
@@ -202,6 +207,14 @@ async function login(email, password) {
                 rejected: true 
             };
         }
+
+        if (data.account_status === 'suspended') {
+            return { 
+                success: false, 
+                error: 'حسابك معلق. يرجى التواصل مع الإدارة.',
+                suspended: true 
+            };
+        }
     }
     
     return { success: false, error: data.message };
@@ -211,13 +224,10 @@ async function login(email, password) {
 const result = await login('john@example.com', 'password123');
 
 if (result.pendingReview) {
-    // Show pending review page
     showPendingReviewPage();
 } else if (result.needsVerification) {
-    // Show email verification page
     showVerificationPage();
 } else if (result.success) {
-    // Redirect to dashboard
     window.location.href = '/dashboard';
 }
 ```
@@ -253,11 +263,17 @@ async function logout() {
 ```javascript
 async function apiRequest(endpoint, options = {}) {
     const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
     
     const defaultHeaders = {
         'Accept': 'application/json',
         'Authorization': `Bearer ${token}`
     };
+
+    // ✅ Add language header based on user preference
+    if (user.preferred_language) {
+        defaultHeaders['X-Language'] = user.preferred_language;
+    }
     
     // Don't set Content-Type for FormData
     if (!(options.body instanceof FormData)) {
@@ -295,9 +311,234 @@ async function apiRequest(endpoint, options = {}) {
             window.location.href = '/account-rejected';
             return;
         }
+
+        if (data.account_status === 'suspended') {
+            alert('حسابك معلق. يرجى التواصل مع الإدارة.');
+            window.location.href = '/account-suspended';
+            return;
+        }
     }
     
     return response;
+}
+```
+
+---
+
+## 🌍 Multilingual Support
+
+Trinova supports **dynamic language switching** in the frontend. The API automatically responds in the user's preferred language.
+
+### How It Works
+
+The API detects language in this priority order:
+
+| Priority | Source | Example |
+|----------|--------|---------|
+| 1️⃣ | Query Parameter | `?lang=ar` |
+| 2️⃣ | Custom Header | `X-Language: en` |
+| 3️⃣ | User Preference | `preferred_language` in database |
+| 4️⃣ | Accept-Language Header | `Accept-Language: ar,en;q=0.9` |
+| 5️⃣ | Default from .env | `APP_LOCALE=ar` |
+
+### Change User Language
+
+```javascript
+async function changeUserLanguage(language) {
+    const response = await apiRequest('/user/language', {
+        method: 'POST',
+        body: JSON.stringify({ language })
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+        // Update local storage
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        user.preferred_language = language;
+        localStorage.setItem('user', JSON.stringify(user));
+        
+        // Reload page to apply new language
+        window.location.reload();
+        
+        return { success: true, language: data.language };
+    }
+    
+    return { success: false, error: data.message };
+}
+
+// Usage - Switch to English
+await changeUserLanguage('en');
+
+// Usage - Switch to Arabic
+await changeUserLanguage('ar');
+```
+
+### Language Selector Component (React)
+
+```javascript
+// LanguageSelector.jsx
+import { useState } from 'react';
+import { useAuth } from './AuthContext';
+
+function LanguageSelector() {
+    const { user, updateUser } = useAuth();
+    const [currentLang, setCurrentLang] = useState(user?.preferred_language || 'ar');
+    const [loading, setLoading] = useState(false);
+
+    const handleLanguageChange = async (lang) => {
+        setLoading(true);
+        try {
+            const response = await fetch(`${API_BASE_URL}/user/language`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({ language: lang })
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                setCurrentLang(lang);
+                updateUser({ ...user, preferred_language: lang });
+                
+                // Apply direction change
+                document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+                document.documentElement.lang = lang;
+                
+                // Reload to apply translations
+                setTimeout(() => window.location.reload(), 500);
+            }
+        } catch (error) {
+            console.error('Failed to change language:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="language-selector">
+            <button 
+                onClick={() => handleLanguageChange('ar')}
+                className={currentLang === 'ar' ? 'active' : ''}
+                disabled={loading}
+            >
+                العربية 🇸🇦
+            </button>
+            <button 
+                onClick={() => handleLanguageChange('en')}
+                className={currentLang === 'en' ? 'active' : ''}
+                disabled={loading}
+            >
+                English 🇬🇧
+            </button>
+        </div>
+    );
+}
+
+export default LanguageSelector;
+```
+
+### Apply Language Direction
+
+```javascript
+// Apply RTL/LTR based on language
+function applyLanguageDirection(language) {
+    const direction = language === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.dir = direction;
+    document.documentElement.lang = language;
+    
+    // Update body class
+    document.body.classList.remove('ltr', 'rtl');
+    document.body.classList.add(direction);
+}
+
+// Call on app initialization
+const user = JSON.parse(localStorage.getItem('user') || '{}');
+if (user.preferred_language) {
+    applyLanguageDirection(user.preferred_language);
+}
+```
+
+### CSS for RTL Support
+
+```css
+/* styles.css */
+
+/* Base styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    direction: ltr;
+}
+
+/* Arabic-specific styles */
+body.rtl {
+    direction: rtl;
+    text-align: right;
+    font-family: 'Cairo', 'Tajawal', 'Segoe UI', sans-serif;
+}
+
+/* Navigation */
+.nav {
+    display: flex;
+    gap: 1rem;
+}
+
+body.rtl .nav {
+    flex-direction: row-reverse;
+}
+
+/* Forms */
+input, textarea, select {
+    direction: inherit;
+    text-align: inherit;
+}
+
+/* Buttons */
+.btn {
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+}
+
+/* Cards */
+.card {
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+body.rtl .card {
+    text-align: right;
+}
+```
+
+### Request with Specific Language
+
+```javascript
+// Request with X-Language header
+async function getProfileWithLanguage(language) {
+    const response = await fetch(`${API_BASE_URL}/profile`, {
+        headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'X-Language': language,
+            'Accept': 'application/json'
+        }
+    });
+    
+    return await response.json();
+}
+
+// Request with query parameter
+async function getOpportunitiesWithLanguage(language) {
+    const response = await fetch(`${API_BASE_URL}/opportunities?lang=${language}`, {
+        headers: {
+            'Accept': 'application/json'
+        }
+    });
+    
+    return await response.json();
 }
 ```
 
@@ -396,12 +637,14 @@ submitReport({
 ```javascript
 async function downloadCertificate() {
     const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
     
     const response = await fetch(
         `${API_BASE_URL}/student/certificates/download`,
         {
             headers: {
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`,
+                'X-Language': user.preferred_language || 'ar'
             }
         }
     );
@@ -732,7 +975,6 @@ const result = await approveProvider(5);
 
 if (result.success) {
     alert('Provider approved successfully!');
-    // Refresh pending providers list
     refreshPendingProviders();
 }
 ```
@@ -791,7 +1033,7 @@ function AdminProviderReview() {
         if (confirm('Are you sure you want to approve this provider?')) {
             const result = await approveProvider(providerId);
             if (result.success) {
-                loadPendingProviders(); // Refresh list
+                loadPendingProviders();
             }
         }
     }
@@ -801,7 +1043,7 @@ function AdminProviderReview() {
         if (reason) {
             const result = await rejectProvider(providerId, reason);
             if (result.success) {
-                loadPendingProviders(); // Refresh list
+                loadPendingProviders();
             }
         }
     }
@@ -849,6 +1091,406 @@ function AdminProviderReview() {
 
 ---
 
+## 👨‍💼 Admin User Management
+
+Admins have full control over all users in the system through these powerful endpoints.
+
+### List All Users (Admin Only)
+
+```javascript
+async function getAllUsers(filters = {}) {
+    const queryParams = new URLSearchParams(filters).toString();
+    const endpoint = queryParams ? `/admin/users?${queryParams}` : '/admin/users';
+    
+    const response = await apiRequest(endpoint);
+    return await response.json();
+}
+
+// Usage - Get all users
+const result = await getAllUsers();
+
+// Usage - Filter by role
+const students = await getAllUsers({ role: 'student' });
+
+// Usage - Filter by status
+const activeUsers = await getAllUsers({ status: 'active' });
+
+// Usage - Search by name or email
+const searchResult = await getAllUsers({ search: 'john' });
+
+// Usage - Combined filters
+const filteredUsers = await getAllUsers({
+    role: 'provider',
+    status: 'active',
+    search: 'tech',
+    page: 1,
+    per_page: 20
+});
+```
+
+---
+
+### View User Details (Admin Only)
+
+```javascript
+async function getUserDetails(userId) {
+    const response = await apiRequest(`/admin/users/${userId}`);
+    return await response.json();
+}
+
+// Usage
+const result = await getUserDetails(5);
+
+if (result.success) {
+    console.log('User:', result.data);
+    console.log('Role:', result.data.role);
+    console.log('Status:', result.data.account_status);
+    console.log('Language:', result.data.preferred_language);
+}
+```
+
+---
+
+### Create New User (Admin Only)
+
+```javascript
+async function createUser(userData) {
+    const response = await apiRequest('/admin/users', {
+        method: 'POST',
+        body: JSON.stringify(userData)
+    });
+    
+    return await response.json();
+}
+
+// Usage - Create Student
+const student = await createUser({
+    name: 'Ahmed Mohamed',
+    email: 'ahmed@university.edu',
+    password: 'password123',
+    phone: '0591234567',
+    role: 'student',
+    student_id: '20240999',
+    major: 'IT',
+    university: 'Islamic University',
+    year_of_study: '3'
+});
+
+// Usage - Create Provider
+const provider = await createUser({
+    name: 'Tech Corp',
+    email: 'hr@techcorp.com',
+    password: 'password123',
+    role: 'provider',
+    organization_name: 'Tech Corporation',
+    organization_type: 'company',
+    address: 'Gaza City',
+    city: 'Gaza',
+    country: 'Palestine',
+    account_status: 'active'
+});
+
+// Usage - Create Supervisor
+const supervisor = await createUser({
+    name: 'Dr. Sarah Ahmed',
+    email: 'sarah@iugaza.edu.ps',
+    password: 'password123',
+    role: 'supervisor',
+    employee_id: 'EMP999',
+    department: 'Computer Science',
+    academic_title: 'professor'
+});
+
+// Usage - Create Admin
+const admin = await createUser({
+    name: 'System Admin',
+    email: 'admin@trinova.com',
+    password: 'StrongPassword123!',
+    role: 'admin'
+});
+```
+
+---
+
+### Update User (Admin Only)
+
+```javascript
+async function updateUser(userId, userData) {
+    const response = await apiRequest(`/admin/users/${userId}`, {
+        method: 'PUT',
+        body: JSON.stringify(userData)
+    });
+    
+    return await response.json();
+}
+
+// Usage
+const result = await updateUser(5, {
+    name: 'Updated Name',
+    email: 'updated@example.com',
+    phone: '0591234567'
+});
+```
+
+---
+
+### Delete User (Admin Only)
+
+```javascript
+async function deleteUser(userId) {
+    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+        return { success: false, error: 'Cancelled' };
+    }
+
+    const response = await apiRequest(`/admin/users/${userId}`, {
+        method: 'DELETE'
+    });
+    
+    return await response.json();
+}
+
+// Usage
+const result = await deleteUser(5);
+
+if (result.success) {
+    alert('User deleted successfully');
+    refreshUsersList();
+}
+```
+
+---
+
+### Suspend User (Admin Only)
+
+```javascript
+async function suspendUser(userId) {
+    const response = await apiRequest(`/admin/users/${userId}/suspend`, {
+        method: 'POST'
+    });
+    
+    return await response.json();
+}
+
+// Usage
+const result = await suspendUser(5);
+
+if (result.success) {
+    alert('User suspended successfully');
+    refreshUsersList();
+}
+```
+
+---
+
+### Activate User (Admin Only)
+
+```javascript
+async function activateUser(userId) {
+    const response = await apiRequest(`/admin/users/${userId}/activate`, {
+        method: 'POST'
+    });
+    
+    return await response.json();
+}
+
+// Usage
+const result = await activateUser(5);
+
+if (result.success) {
+    alert('User activated successfully');
+    refreshUsersList();
+}
+```
+
+---
+
+### Reset User Password (Admin Only)
+
+```javascript
+async function resetUserPassword(userId, newPassword) {
+    const response = await apiRequest(`/admin/users/${userId}/reset-password`, {
+        method: 'POST',
+        body: JSON.stringify({
+            password: newPassword,
+            password_confirmation: newPassword
+        })
+    });
+    
+    return await response.json();
+}
+
+// Usage
+const result = await resetUserPassword(5, 'newpassword123');
+
+if (result.success) {
+    alert('Password reset successfully. All user tokens have been invalidated.');
+}
+```
+
+---
+
+### Admin User Management Dashboard (React)
+
+```javascript
+// AdminUserManagement.jsx
+import { useState, useEffect } from 'react';
+
+function AdminUserManagement() {
+    const [users, setUsers] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [filters, setFilters] = useState({
+        role: '',
+        status: '',
+        search: ''
+    });
+    const [showCreateModal, setShowCreateModal] = useState(false);
+
+    useEffect(() => {
+        loadUsers();
+    }, [filters]);
+
+    async function loadUsers() {
+        setLoading(true);
+        const result = await getAllUsers(filters);
+        if (result.success) {
+            setUsers(result.data.data);
+        }
+        setLoading(false);
+    }
+
+    async function handleSuspend(userId) {
+        if (confirm('Are you sure you want to suspend this user?')) {
+            const result = await suspendUser(userId);
+            if (result.success) {
+                loadUsers();
+            }
+        }
+    }
+
+    async function handleActivate(userId) {
+        const result = await activateUser(userId);
+        if (result.success) {
+            loadUsers();
+        }
+    }
+
+    async function handleDelete(userId) {
+        const result = await deleteUser(userId);
+        if (result.success) {
+            loadUsers();
+        }
+    }
+
+    async function handleResetPassword(userId) {
+        const newPassword = prompt('Enter new password (min 8 characters):');
+        if (newPassword && newPassword.length >= 8) {
+            const result = await resetUserPassword(userId, newPassword);
+            if (result.success) {
+                alert('Password reset successfully');
+            }
+        }
+    }
+
+    if (loading) return <div>Loading...</div>;
+
+    return (
+        <div className="admin-user-management">
+            <div className="header">
+                <h1>User Management</h1>
+                <button onClick={() => setShowCreateModal(true)}>
+                    ➕ Create New User
+                </button>
+            </div>
+
+            {/* Filters */}
+            <div className="filters">
+                <select 
+                    value={filters.role} 
+                    onChange={(e) => setFilters({...filters, role: e.target.value})}
+                >
+                    <option value="">All Roles</option>
+                    <option value="student">Student</option>
+                    <option value="provider">Provider</option>
+                    <option value="supervisor">Supervisor</option>
+                    <option value="admin">Admin</option>
+                </select>
+
+                <select 
+                    value={filters.status} 
+                    onChange={(e) => setFilters({...filters, status: e.target.value})}
+                >
+                    <option value="">All Statuses</option>
+                    <option value="active">Active</option>
+                    <option value="pending_review">Pending Review</option>
+                    <option value="suspended">Suspended</option>
+                    <option value="rejected">Rejected</option>
+                </select>
+
+                <input 
+                    type="text"
+                    placeholder="Search by name or email..."
+                    value={filters.search}
+                    onChange={(e) => setFilters({...filters, search: e.target.value})}
+                />
+            </div>
+
+            {/* Users Table */}
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Language</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {users.map(user => (
+                        <tr key={user.id}>
+                            <td>{user.id}</td>
+                            <td>{user.name}</td>
+                            <td>{user.email}</td>
+                            <td>
+                                <span className={`badge badge-${user.role}`}>
+                                    {user.role}
+                                </span>
+                            </td>
+                            <td>
+                                <span className={`status status-${user.account_status}`}>
+                                    {user.account_status}
+                                </span>
+                            </td>
+                            <td>{user.preferred_language || 'ar'}</td>
+                            <td className="actions">
+                                <button onClick={() => handleSuspend(user.id)}>
+                                    ⏸️ Suspend
+                                </button>
+                                <button onClick={() => handleActivate(user.id)}>
+                                    ▶️ Activate
+                                </button>
+                                <button onClick={() => handleResetPassword(user.id)}>
+                                    🔑 Reset Password
+                                </button>
+                                <button onClick={() => handleDelete(user.id)}>
+                                    🗑️ Delete
+                                </button>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+}
+
+export default AdminUserManagement;
+```
+
+---
+
 ## 🎯 React Integration
 
 ### Auth Context
@@ -864,6 +1506,7 @@ export function AuthProvider({ children }) {
     const [token, setToken] = useState(localStorage.getItem('token'));
     const [loading, setLoading] = useState(true);
     const [accountStatus, setAccountStatus] = useState(null);
+    const [language, setLanguage] = useState('ar');
     
     useEffect(() => {
         if (token) {
@@ -872,13 +1515,22 @@ export function AuthProvider({ children }) {
             setLoading(false);
         }
     }, [token]);
+
+    // Apply language direction on mount
+    useEffect(() => {
+        const savedUser = JSON.parse(localStorage.getItem('user') || '{}');
+        const lang = savedUser.preferred_language || 'ar';
+        setLanguage(lang);
+        applyLanguageDirection(lang);
+    }, []);
     
     async function fetchProfile() {
         try {
             const response = await fetch(`${API_BASE_URL}/profile`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'X-Language': language
                 }
             });
             
@@ -887,6 +1539,12 @@ export function AuthProvider({ children }) {
             if (response.ok) {
                 setUser(data.user);
                 setAccountStatus(data.user.account_status);
+                
+                // Update language if changed
+                if (data.user.preferred_language) {
+                    setLanguage(data.user.preferred_language);
+                    applyLanguageDirection(data.user.preferred_language);
+                }
             } else {
                 logout();
             }
@@ -912,9 +1570,16 @@ export function AuthProvider({ children }) {
         
         if (response.ok) {
             localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
             setToken(data.token);
             setUser(data.user);
             setAccountStatus(data.user.account_status);
+            
+            // Set language
+            const lang = data.user.preferred_language || 'ar';
+            setLanguage(lang);
+            applyLanguageDirection(lang);
+            
             return { success: true };
         }
         
@@ -924,6 +1589,37 @@ export function AuthProvider({ children }) {
             accountStatus: data.account_status 
         };
     }
+
+    async function changeLanguage(newLanguage) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/user/language`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ language: newLanguage })
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                setLanguage(newLanguage);
+                applyLanguageDirection(newLanguage);
+                
+                // Update user in localStorage
+                const updatedUser = { ...user, preferred_language: newLanguage };
+                setUser(updatedUser);
+                localStorage.setItem('user', JSON.stringify(updatedUser));
+                
+                return { success: true };
+            }
+            
+            return { success: false, error: data.message };
+        } catch (error) {
+            return { success: false, error: error.message };
+        }
+    }
     
     function logout() {
         localStorage.removeItem('token');
@@ -932,6 +1628,14 @@ export function AuthProvider({ children }) {
         setUser(null);
         setAccountStatus(null);
     }
+
+    function applyLanguageDirection(lang) {
+        const direction = lang === 'ar' ? 'rtl' : 'ltr';
+        document.documentElement.dir = direction;
+        document.documentElement.lang = lang;
+        document.body.classList.remove('ltr', 'rtl');
+        document.body.classList.add(direction);
+    }
     
     return (
         <AuthContext.Provider value={{ 
@@ -939,8 +1643,10 @@ export function AuthProvider({ children }) {
             token, 
             loading, 
             accountStatus,
+            language,
             login, 
             logout,
+            changeLanguage,
             fetchProfile 
         }}>
             {children}
@@ -960,9 +1666,10 @@ export function useAuth() {
 ```javascript
 // Dashboard.js
 import { useAuth } from './AuthContext';
+import LanguageSelector from './LanguageSelector';
 
 function Dashboard() {
-    const { user, logout, loading, accountStatus } = useAuth();
+    const { user, logout, loading, accountStatus, language, changeLanguage } = useAuth();
     
     if (loading) {
         return <div>Loading...</div>;
@@ -983,14 +1690,30 @@ function Dashboard() {
             </div>
         );
     }
+
+    // Handle suspended status
+    if (accountStatus === 'suspended') {
+        return (
+            <div>
+                <h1>Account Suspended</h1>
+                <p>Your account has been suspended. Please contact administration.</p>
+                <button onClick={logout}>Logout</button>
+            </div>
+        );
+    }
     
     return (
         <div>
+            <header>
+                <LanguageSelector />
+                <button onClick={logout}>Logout</button>
+            </header>
+            
             <h1>Welcome, {user.name}!</h1>
             <p>Role: {user.role}</p>
             <p>Email: {user.email}</p>
             <p>Account Status: {accountStatus}</p>
-            <button onClick={logout}>Logout</button>
+            <p>Language: {language === 'ar' ? 'العربية' : 'English'}</p>
         </div>
     );
 }
@@ -1024,6 +1747,10 @@ function ProtectedRoute({ children, requiredRole }) {
     if (accountStatus === 'rejected') {
         return <Navigate to="/account-rejected" replace />;
     }
+
+    if (accountStatus === 'suspended') {
+        return <Navigate to="/account-suspended" replace />;
+    }
     
     // Check role
     if (requiredRole && user.role !== requiredRole) {
@@ -1049,7 +1776,7 @@ function AIReportAssistant() {
     const [points, setPoints] = useState(['', '']);
     const [result, setResult] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [mode, setMode] = useState('improve'); // improve, analyze, generate, suggest
+    const [mode, setMode] = useState('improve');
     
     async function handleImprove() {
         setLoading(true);
@@ -1177,12 +1904,20 @@ const api = axios.create({
     }
 });
 
-// Add token to requests
+// Add token and language to requests
 api.interceptors.request.use(config => {
     const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // ✅ Add language header
+    if (user.preferred_language) {
+        config.headers['X-Language'] = user.preferred_language;
+    }
+    
     return config;
 });
 
@@ -1205,6 +1940,9 @@ api.interceptors.response.use(
             } else if (data.account_status === 'rejected') {
                 alert(`تم رفض حسابك: ${data.rejection_reason}`);
                 window.location.href = '/account-rejected';
+            } else if (data.account_status === 'suspended') {
+                alert('حسابك معلق. يرجى التواصل مع الإدارة.');
+                window.location.href = '/account-suspended';
             }
         }
         
@@ -1223,6 +1961,17 @@ export default api;
 <template>
     <div>
         <h1>Opportunities</h1>
+        
+        <!-- Language Selector -->
+        <div class="language-selector">
+            <button @click="changeLanguage('ar')" :class="{ active: currentLang === 'ar' }">
+                العربية
+            </button>
+            <button @click="changeLanguage('en')" :class="{ active: currentLang === 'en' }">
+                English
+            </button>
+        </div>
+
         <div v-if="loading">Loading...</div>
         <div v-else>
             <div v-for="opp in opportunities" :key="opp.id" class="opportunity">
@@ -1240,6 +1989,7 @@ import api from './api';
 
 const opportunities = ref([]);
 const loading = ref(true);
+const currentLang = ref('ar');
 
 onMounted(async () => {
     try {
@@ -1251,6 +2001,30 @@ onMounted(async () => {
         loading.value = false;
     }
 });
+
+async function changeLanguage(lang) {
+    try {
+        const response = await api.post('/user/language', { language: lang });
+        
+        if (response.data.success) {
+            currentLang.value = lang;
+            
+            // Update user in localStorage
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            user.preferred_language = lang;
+            localStorage.setItem('user', JSON.stringify(user));
+            
+            // Apply direction
+            document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+            document.documentElement.lang = lang;
+            
+            // Reload to apply translations
+            setTimeout(() => window.location.reload(), 500);
+        }
+    } catch (error) {
+        console.error('Failed to change language:', error);
+    }
+}
 </script>
 ```
 
@@ -1266,11 +2040,13 @@ import api from '../api';
 const user = ref(null);
 const token = ref(localStorage.getItem('token'));
 const accountStatus = ref(null);
+const language = ref('ar');
 
 export function useAuth() {
     const isAuthenticated = computed(() => !!token.value);
     const isPendingReview = computed(() => accountStatus.value === 'pending_review');
     const isRejected = computed(() => accountStatus.value === 'rejected');
+    const isSuspended = computed(() => accountStatus.value === 'suspended');
     
     async function login(email, password) {
         try {
@@ -1281,6 +2057,11 @@ export function useAuth() {
                 localStorage.setItem('token', response.data.token);
                 user.value = response.data.user;
                 accountStatus.value = response.data.user.account_status;
+                language.value = response.data.user.preferred_language || 'ar';
+                
+                // Apply direction
+                applyLanguageDirection(language.value);
+                
                 return { success: true };
             }
             
@@ -1292,6 +2073,36 @@ export function useAuth() {
                 accountStatus: error.response?.data?.account_status
             };
         }
+    }
+    
+    async function changeLanguage(newLanguage) {
+        try {
+            const response = await api.post('/user/language', { language: newLanguage });
+            
+            if (response.data.success) {
+                language.value = newLanguage;
+                
+                // Update user
+                if (user.value) {
+                    user.value.preferred_language = newLanguage;
+                    localStorage.setItem('user', JSON.stringify(user.value));
+                }
+                
+                applyLanguageDirection(newLanguage);
+                
+                return { success: true };
+            }
+            
+            return { success: false };
+        } catch (error) {
+            return { success: false, error: error.message };
+        }
+    }
+
+    function applyLanguageDirection(lang) {
+        const direction = lang === 'ar' ? 'rtl' : 'ltr';
+        document.documentElement.dir = direction;
+        document.documentElement.lang = lang;
     }
     
     function logout() {
@@ -1307,6 +2118,11 @@ export function useAuth() {
             const response = await api.get('/profile');
             user.value = response.data.user;
             accountStatus.value = response.data.user.account_status;
+            
+            if (response.data.user.preferred_language) {
+                language.value = response.data.user.preferred_language;
+                applyLanguageDirection(language.value);
+            }
         } catch (error) {
             console.error('Failed to fetch profile:', error);
             logout();
@@ -1317,12 +2133,15 @@ export function useAuth() {
         user,
         token,
         accountStatus,
+        language,
         isAuthenticated,
         isPendingReview,
         isRejected,
+        isSuspended,
         login,
         logout,
-        fetchProfile
+        fetchProfile,
+        changeLanguage
     };
 }
 ```
@@ -1420,6 +2239,155 @@ export function useAI() {
 
 ---
 
+### Admin User Management Composable
+
+```javascript
+// composables/useAdminUsers.js
+import { ref } from 'vue';
+import api from '../api';
+
+export function useAdminUsers() {
+    const users = ref([]);
+    const loading = ref(false);
+    const error = ref(null);
+    const meta = ref({});
+
+    async function fetchUsers(filters = {}) {
+        loading.value = true;
+        error.value = null;
+
+        try {
+            const queryParams = new URLSearchParams(filters).toString();
+            const endpoint = queryParams ? `/admin/users?${queryParams}` : '/admin/users';
+            
+            const response = await api.get(endpoint);
+            users.value = response.data.data.data || [];
+            meta.value = {
+                total: response.data.data.total,
+                current_page: response.data.data.current_page,
+                last_page: response.data.data.last_page
+            };
+            
+            return { success: true };
+        } catch (err) {
+            error.value = err.response?.data?.message || 'Failed to fetch users';
+            return { success: false, error: error.value };
+        } finally {
+            loading.value = false;
+        }
+    }
+
+    async function createUser(userData) {
+        loading.value = true;
+        error.value = null;
+
+        try {
+            const response = await api.post('/admin/users', userData);
+            return { success: true, data: response.data.data };
+        } catch (err) {
+            error.value = err.response?.data?.message || 'Failed to create user';
+            return { success: false, error: error.value };
+        } finally {
+            loading.value = false;
+        }
+    }
+
+    async function updateUser(userId, userData) {
+        loading.value = true;
+        error.value = null;
+
+        try {
+            const response = await api.put(`/admin/users/${userId}`, userData);
+            return { success: true, data: response.data.data };
+        } catch (err) {
+            error.value = err.response?.data?.message || 'Failed to update user';
+            return { success: false, error: error.value };
+        } finally {
+            loading.value = false;
+        }
+    }
+
+    async function deleteUser(userId) {
+        loading.value = true;
+        error.value = null;
+
+        try {
+            const response = await api.delete(`/admin/users/${userId}`);
+            return { success: true };
+        } catch (err) {
+            error.value = err.response?.data?.message || 'Failed to delete user';
+            return { success: false, error: error.value };
+        } finally {
+            loading.value = false;
+        }
+    }
+
+    async function suspendUser(userId) {
+        loading.value = true;
+        error.value = null;
+
+        try {
+            const response = await api.post(`/admin/users/${userId}/suspend`);
+            return { success: true, data: response.data.data };
+        } catch (err) {
+            error.value = err.response?.data?.message || 'Failed to suspend user';
+            return { success: false, error: error.value };
+        } finally {
+            loading.value = false;
+        }
+    }
+
+    async function activateUser(userId) {
+        loading.value = true;
+        error.value = null;
+
+        try {
+            const response = await api.post(`/admin/users/${userId}/activate`);
+            return { success: true, data: response.data.data };
+        } catch (err) {
+            error.value = err.response?.data?.message || 'Failed to activate user';
+            return { success: false, error: error.value };
+        } finally {
+            loading.value = false;
+        }
+    }
+
+    async function resetPassword(userId, password) {
+        loading.value = true;
+        error.value = null;
+
+        try {
+            const response = await api.post(`/admin/users/${userId}/reset-password`, {
+                password,
+                password_confirmation: password
+            });
+            return { success: true };
+        } catch (err) {
+            error.value = err.response?.data?.message || 'Failed to reset password';
+            return { success: false, error: error.value };
+        } finally {
+            loading.value = false;
+        }
+    }
+
+    return {
+        users,
+        loading,
+        error,
+        meta,
+        fetchUsers,
+        createUser,
+        updateUser,
+        deleteUser,
+        suspendUser,
+        activateUser,
+        resetPassword
+    };
+}
+```
+
+---
+
 ## 📱 CORS Configuration
 
 If you get CORS errors, update `config/cors.php`:
@@ -1498,6 +2466,9 @@ export function handleApiError(error) {
                 } else if (data.account_status === 'rejected') {
                     alert(`تم رفض حسابك: ${data.rejection_reason}`);
                     window.location.href = '/account-rejected';
+                } else if (data.account_status === 'suspended') {
+                    alert('حسابك معلق. يرجى التواصل مع الإدارة.');
+                    window.location.href = '/account-suspended';
                 } else {
                     alert('You do not have permission to perform this action.');
                 }
@@ -1677,6 +2648,94 @@ console.log('Detected language:', language);
 
 ---
 
+### 8. Apply Language Direction
+
+```javascript
+function applyLanguageDirection(language) {
+    const direction = language === 'ar' ? 'rtl' : 'ltr';
+    
+    // Update HTML attributes
+    document.documentElement.dir = direction;
+    document.documentElement.lang = language;
+    
+    // Update body class
+    document.body.classList.remove('ltr', 'rtl');
+    document.body.classList.add(direction);
+    
+    // Save preference
+    localStorage.setItem('preferred_language', language);
+}
+
+// Call on app initialization
+const savedLang = localStorage.getItem('preferred_language') || 'ar';
+applyLanguageDirection(savedLang);
+```
+
+---
+
+### 9. Handle User Language Preference
+
+```javascript
+// Always send user's preferred language with requests
+function getAuthHeaders() {
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    
+    return {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json',
+        'X-Language': user.preferred_language || 'ar'
+    };
+}
+
+// Usage
+const response = await fetch(`${API_BASE_URL}/profile`, {
+    headers: getAuthHeaders()
+});
+```
+
+---
+
+### 10. Admin User Management Best Practices
+
+```javascript
+// Always confirm destructive actions
+async function deleteUserWithConfirmation(userId, userName) {
+    const confirmed = confirm(
+        `Are you sure you want to delete user "${userName}"?\n\n` +
+        `This action cannot be undone and will delete all related data.`
+    );
+    
+    if (!confirmed) {
+        return { success: false, error: 'Cancelled by user' };
+    }
+    
+    return await deleteUser(userId);
+}
+
+// Validate password strength
+function validatePassword(password) {
+    if (password.length < 8) {
+        return { valid: false, error: 'Password must be at least 8 characters' };
+    }
+    
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumbers = /\d/.test(password);
+    
+    if (!hasUpperCase || !hasLowerCase || !hasNumbers) {
+        return { 
+            valid: false, 
+            error: 'Password must contain uppercase, lowercase, and numbers' 
+        };
+    }
+    
+    return { valid: true };
+}
+```
+
+---
+
 ## 📞 Support
 
 For frontend integration issues:
@@ -1687,6 +2746,7 @@ For frontend integration issues:
 - 📋 Verify CORS configuration
 - 🔐 Ensure token is valid
 - 🤖 Verify Groq API key is set for AI features
+- 🌍 Check language headers are being sent
 
 ---
 
@@ -1696,7 +2756,30 @@ For frontend integration issues:
 # .env.example
 VITE_API_URL=http://127.0.0.1:8000/api
 VITE_APP_NAME=Trinova
+VITE_DEFAULT_LOCALE=ar
+VITE_SUPPORTED_LOCALES=en,ar
 ```
+
+---
+
+## 📚 Translation Keys Reference
+
+The API returns messages in the user's preferred language. Common translation keys:
+
+| Category | Example Keys |
+|----------|--------------|
+| `auth` | `register_success`, `login_success`, `account_pending_review` |
+| `validation` | `content_required`, `points_required`, `major_required` |
+| `opportunity` | `created`, `updated`, `closed`, `reopened` |
+| `application` | `submitted`, `withdrawn`, `status_updated` |
+| `report` | `submitted`, `reviewed`, `save_error_prefix` |
+| `evaluation` | `saved`, `final_calculated` |
+| `message` | `sent`, `marked_read` |
+| `notification` | `not_found`, `marked_read`, `deleted` |
+| `ai` | `improve_success`, `analyze_success`, `generate_success` |
+| `admin` | `user_created`, `user_deleted`, `user_suspended` |
+| `certificate` | `generated`, `not_found` |
+| `general` | `unauthorized`, `forbidden`, `server_error` |
 
 ---
 
@@ -1707,5 +2790,7 @@ VITE_APP_NAME=Trinova
 **Made with ❤️ by Trinova Team**
 
 **Powered by Groq AI 🤖**
+
+**Supports: العربية 🇸🇦 | English 🇬🇧**
 
 </div>

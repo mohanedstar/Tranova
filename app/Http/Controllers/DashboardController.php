@@ -22,7 +22,7 @@ class DashboardController extends Controller
         $student = $request->user()->student;
 
         if (!$student) {
-            return response()->json(['message' => 'بيانات الطالب غير مكتملة'], 400);
+            return response()->json(['message' => __('messages.auth.incomplete_student_data')], 400);
         }
 
         // الإحصائيات
@@ -78,7 +78,7 @@ class DashboardController extends Controller
         $provider = $request->user()->provider;
 
         if (!$provider) {
-            return response()->json(['message' => 'بيانات المزود غير مكتملة'], 400);
+            return response()->json(['message' => __('messages.auth.incomplete_provider_data')], 400);
         }
 
         // الإحصائيات
@@ -135,7 +135,7 @@ class DashboardController extends Controller
         $supervisor = $request->user()->supervisor;
 
         if (!$supervisor) {
-            return response()->json(['message' => 'بيانات المشرف غير مكتملة'], 400);
+            return response()->json(['message' => __('messages.auth.incomplete_supervisor_data')], 400);
         }
 
         // الطلاب المُشرف عليهم حالياً

@@ -55,7 +55,7 @@ class AdminController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'تم تعيين المشرف بنجاح',
+            'message' => __('messages.admin.supervisor_assigned'),
             'assignment' => $assignment->load('supervisor.user', 'student.user')
         ], 201);
     }
@@ -74,7 +74,7 @@ class AdminController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'تم تحديث السجل',
+            'message' => __('messages.admin.record_updated'),
             'record' => $record
         ]);
     }

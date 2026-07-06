@@ -1,0 +1,182 @@
+# تقرير فحص النصوص العربية
+
+## 📊 الإحصائيات
+
+- الملفات المفحوصة: 16
+- إجمالي النصوص العربية: 148
+- ✅ نصوص لها mapping: 101
+- ⚠️ نصوص بدون mapping: 47
+- إجمالي الأحرف: 7826
+
+## ✅ نصوص جاهزة للاستبدال
+
+| الملف | السطر | النص | المفتاح |
+|------|-------|------|---------|
+| \app/Http/Controllers\AIReportController.php | 73 | محتوى التقرير مطلوب. | messages.validation.content_required |
+| \app/Http/Controllers\AIReportController.php | 74 | يجب أن يحتوي التقرير على 10 أحرف على الأقل. | messages.validation.content_min |
+| \app/Http/Controllers\AIReportController.php | 120 | لم يتمكن الذكاء الاصطناعي من تحسين النص. | messages.ai.failed_improve |
+| \app/Http/Controllers\AIReportController.php | 129 | تم تحسين التقرير بنجاح باستخدام الذكاء الاصطناعي. | messages.ai.improve_success |
+| \app/Http/Controllers\AIReportController.php | 160 | محتوى التقرير مطلوب. | messages.validation.content_required |
+| \app/Http/Controllers\AIReportController.php | 161 | يجب أن يحتوي التقرير على 10 أحرف على الأقل. | messages.validation.content_min |
+| \app/Http/Controllers\AIReportController.php | 217 | لم يتمكن الذكاء الاصطناعي من تحليل التقرير. | messages.ai.failed_analyze |
+| \app/Http/Controllers\AIReportController.php | 235 | تم تحليل التقرير بنجاح. | messages.ai.analyze_default |
+| \app/Http/Controllers\AIReportController.php | 269 | تم تحليل التقرير بنجاح باستخدام الذكاء الاصطناعي. | messages.ai.analyze_success |
+| \app/Http/Controllers\AIReportController.php | 311 | يجب إدخال نقاط التقرير. | messages.validation.points_required |
+| \app/Http/Controllers\AIReportController.php | 312 | يجب إدخال نقطتين على الأقل. | messages.validation.points_min |
+| \app/Http/Controllers\AIReportController.php | 313 | الحد الأقصى 20 نقطة. | messages.validation.points_max |
+| \app/Http/Controllers\AIReportController.php | 314 | كل نقطة يجب أن تحتوي على نص. | messages.validation.point_required |
+| \app/Http/Controllers\AIReportController.php | 315 | كل نقطة يجب أن تحتوي على 3 أحرف على الأقل. | messages.validation.point_min |
+| \app/Http/Controllers\AIReportController.php | 385 | لم يتمكن الذكاء الاصطناعي من توليد التقرير. | messages.ai.failed_generate |
+| \app/Http/Controllers\AIReportController.php | 397 | تم توليد التقرير بنجاح باستخدام الذكاء الاصطناعي. | messages.ai.generate_success |
+| \app/Http/Controllers\AIReportController.php | 432 | التخصص مطلوب. | messages.validation.major_required |
+| \app/Http/Controllers\AIReportController.php | 530 | لم يتمكن الذكاء الاصطناعي من توليد الاقتراحات. | messages.ai.failed_suggest |
+| \app/Http/Controllers\AIReportController.php | 546 | تم توليد الاقتراحات بنجاح. | messages.ai.suggest_default |
+| \app/Http/Controllers\AIReportController.php | 576 | تم توليد الاقتراحات بنجاح باستخدام الذكاء الاصطناعي. | messages.ai.suggest_success |
+| \app/Http/Controllers\AdminProviderController.php | 57 | المزود غير موجود | messages.admin.provider_not_found |
+| \app/Http/Controllers\AdminProviderController.php | 64 | الحساب موثق بالفعل | messages.admin.already_approved |
+| \app/Http/Controllers\AdminProviderController.php | 75 | تمت الموافقة على حساب المزود بنجاح | messages.admin.provider_approved |
+| \app/Http/Controllers\AdminProviderController.php | 95 | المزود غير موجود | messages.admin.provider_not_found |
+| \app/Http/Controllers\AdminProviderController.php | 106 | تم رفض حساب المزود | messages.admin.provider_rejected |
+| \app/Http/Controllers\ApplicationController.php | 22 | الفرصة لم تعد متاحة | messages.opportunity.not_available |
+| \app/Http/Controllers\ApplicationController.php | 31 | لقد قدمت على هذه الفرصة مسبقاً | messages.opportunity.already_applied |
+| \app/Http/Controllers\ApplicationController.php | 57 | تم التقديم بنجاح | messages.application.submitted |
+| \app/Http/Controllers\ApplicationController.php | 82 | غير مصرح | messages.general.unauthorized |
+| \app/Http/Controllers\ApplicationController.php | 101 | غير مصرح | messages.general.unauthorized |
+| \app/Http/Controllers\ApplicationController.php | 128 | تم تحديث حالة التقديم | messages.application.status_updated |
+| \app/Http/Controllers\ApplicationController.php | 139 | غير مصرح | messages.general.unauthorized |
+| \app/Http/Controllers\ApplicationController.php | 144 | تم الانسحاب بنجاح | messages.application.withdrawn |
+| \app/Http/Controllers\ApplicationController.php | 159 | بيانات المزود غير مكتملة | messages.auth.incomplete_provider_data |
+| \app/Http/Controllers\ApplicationController.php | 173 | لا توجد بيانات تقديم لهذا الطالب لدى مؤسستك | messages.application.no_application_found |
+| \app/Http/Controllers\AuthController.php | 117 | تم التسجيل بنجاح. يرجى التحقق من بريدك الإلكتروني أولاً، ثم سيتم مراجعة حسابك من قبل الإدارة. سيتم إعلامك بالبريد عند الموافقة. | messages.auth.register_pending |
+| \app/Http/Controllers\AuthController.php | 119 | تم التسجيل بنجاح. يرجى التحقق من بريدك الإلكتروني. | messages.auth.register_success |
+| \app/Http/Controllers\AuthController.php | 140 | بيانات الدخول غير صحيحة | messages.auth.invalid_credentials |
+| \app/Http/Controllers\AuthController.php | 146 | يرجى التحقق من بريدك الإلكتروني أولاً | messages.auth.email_not_verified |
+| \app/Http/Controllers\AuthController.php | 154 | حسابك قيد المراجعة من قبل الإدارة. سيتم إعلامك عند الموافقة. | messages.auth.account_pending_review |
+| \app/Http/Controllers\AuthController.php | 169 | حسابك معلق. يرجى التواصل مع الإدارة. | messages.auth.account_suspended |
+| \app/Http/Controllers\AuthController.php | 183 | تم تسجيل الدخول بنجاح | messages.auth.login_success |
+| \app/Http/Controllers\AuthController.php | 193 | تم تسجيل الخروج بنجاح | messages.auth.logout_success |
+| \app/Http/Controllers\AuthController.php | 220 | بيانات المزود غير مكتملة | messages.auth.incomplete_provider_data |
+| \app/Http/Controllers\AuthController.php | 234 | لا توجد بيانات تقديم لهذا الطالب لدى مؤسستك | messages.application.no_application_found |
+| \app/Http/Controllers\DashboardController.php | 25 | بيانات الطالب غير مكتملة | messages.auth.incomplete_student_data |
+| \app/Http/Controllers\DashboardController.php | 81 | بيانات المزود غير مكتملة | messages.auth.incomplete_provider_data |
+| \app/Http/Controllers\DashboardController.php | 138 | بيانات المشرف غير مكتملة | messages.auth.incomplete_supervisor_data |
+| \app/Http/Controllers\EvaluationCalculationController.php | 30 | بيانات الطالب غير مكتملة | messages.auth.incomplete_student_data |
+| \app/Http/Controllers\EvaluationController.php | 18 | بيانات المزود غير مكتملة | messages.auth.incomplete_provider_data |
+| \app/Http/Controllers\EvaluationController.php | 41 | غير مصرح - هذه الفرصة لا تابعة لك | messages.evaluation.unauthorized_opportunity |
+| \app/Http/Controllers\EvaluationController.php | 51 | الطالب غير مقبول في هذه الفرصة | messages.evaluation.student_not_accepted |
+| \app/Http/Controllers\EvaluationController.php | 74 | تم حفظ التقييم | messages.evaluation.saved |
+| \app/Http/Controllers\EvaluationController.php | 85 | بيانات المشرف غير مكتملة | messages.auth.incomplete_supervisor_data |
+| \app/Http/Controllers\EvaluationController.php | 103 | غير مصرح - هذا الطالب ليس تابعاً لك | messages.evaluation.unauthorized_student |
+| \app/Http/Controllers\EvaluationController.php | 113 | الطالب غير مقبول في هذه الفرصة | messages.evaluation.student_not_accepted |
+| \app/Http/Controllers\EvaluationController.php | 132 | تم حفظ التقييم | messages.evaluation.saved |
+| \app/Http/Controllers\EvaluationController.php | 143 | بيانات الطالب غير مكتملة | messages.auth.incomplete_student_data |
+| \app/Http/Controllers\MessageController.php | 31 | تم إرسال الرسالة | messages.message.sent |
+| \app/Http/Controllers\MessageController.php | 62 | غير مصرح | messages.general.unauthorized |
+| \app/Http/Controllers\MessageController.php | 70 | تم التعليم كمقروءة | messages.message.marked_read |
+| \app/Http/Controllers\NotificationController.php | 44 | الإشعار غير موجود | messages.notification.not_found |
+| \app/Http/Controllers\NotificationController.php | 49 | تم تعليم الإشعار كمقروء | messages.notification.marked_read |
+| \app/Http/Controllers\NotificationController.php | 57 | تم تعليم جميع الإشعارات كمقروءة | messages.notification.all_marked_read |
+| \app/Http/Controllers\NotificationController.php | 66 | الإشعار غير موجود | messages.notification.not_found |
+| \app/Http/Controllers\NotificationController.php | 71 | تم حذف الإشعار | messages.notification.deleted |
+| \app/Http/Controllers\NotificationController.php | 79 | تم حذف جميع الإشعارات | messages.notification.all_deleted |
+| \app/Http/Controllers\OpportunityController.php | 114 | بيانات المزود غير مكتملة | messages.auth.incomplete_provider_data |
+| \app/Http/Controllers\OpportunityController.php | 121 | حسابك قيد المراجعة أو مرفوض. لا يمكنك نشر فرص تدريبية حتى تتم الموافقة على حسابك. | messages.opportunity.account_not_active |
+| \app/Http/Controllers\OpportunityController.php | 149 | تم إنشاء الفرصة بنجاح | messages.opportunity.created |
+| \app/Http/Controllers\OpportunityController.php | 164 | بيانات المزود غير مكتملة | messages.auth.incomplete_provider_data |
+| \app/Http/Controllers\OpportunityController.php | 170 | حسابك غير نشط. لا يمكنك تعديل الفرص. | messages.opportunity.cannot_modify |
+| \app/Http/Controllers\OpportunityController.php | 177 | غير مصرح | messages.general.unauthorized |
+| \app/Http/Controllers\OpportunityController.php | 194 | تم تحديث الفرصة بنجاح | messages.opportunity.updated |
+| \app/Http/Controllers\OpportunityController.php | 209 | بيانات المزود غير مكتملة | messages.auth.incomplete_provider_data |
+| \app/Http/Controllers\OpportunityController.php | 215 | حسابك غير نشط. لا يمكنك إغلاق الفرص. | messages.opportunity.cannot_close |
+| \app/Http/Controllers\OpportunityController.php | 221 | غير مصرح | messages.general.unauthorized |
+| \app/Http/Controllers\OpportunityController.php | 227 | تم إغلاق الفرصة بنجاح | messages.opportunity.closed |
+| \app/Http/Controllers\OpportunityController.php | 242 | بيانات المزود غير مكتملة | messages.auth.incomplete_provider_data |
+| \app/Http/Controllers\OpportunityController.php | 248 | حسابك غير نشط. لا يمكنك إعادة فتح الفرص. | messages.opportunity.cannot_reopen |
+| \app/Http/Controllers\OpportunityController.php | 254 | غير مصرح | messages.general.unauthorized |
+| \app/Http/Controllers\OpportunityController.php | 260 | يمكن إعادة فتح الفرصة المغلقة فقط | messages.opportunity.cannot_reopen_closed |
+| \app/Http/Controllers\OpportunityController.php | 267 | لا يمكن إعادة فتح الفرصة - الموعد النهائي قد انتهى | messages.opportunity.deadline_passed |
+| \app/Http/Controllers\OpportunityController.php | 274 | تم إعادة فتح الفرصة بنجاح | messages.opportunity.reopened |
+| \app/Http/Controllers\OpportunityController.php | 290 | بيانات المزود غير مكتملة | messages.auth.incomplete_provider_data |
+| \app/Http/Controllers\PasswordResetController.php | 45 | تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني | messages.auth.password_reset_sent |
+| \app/Http/Controllers\PasswordResetController.php | 61 | التوكن غير صالح أو منتهي الصلاحية | messages.auth.token_invalid |
+| \app/Http/Controllers\PasswordResetController.php | 67 | التوكن صالح | messages.auth.token_valid |
+| \app/Http/Controllers\PasswordResetController.php | 84 | التوكن غير صالح أو منتهي الصلاحية | messages.auth.token_invalid |
+| \app/Http/Controllers\PasswordResetController.php | 103 | تم إعادة تعيين كلمة المرور بنجاح | messages.auth.password_reset_success |
+| \app/Http/Controllers\VerifyEmailController.php | 63 | تم التحقق من بريدك الإلكتروني بنجاح! | messages.auth.email_verified |
+| \app/Http/Controllers\VerifyEmailController.php | 79 | غير مصرح - يرجى تسجيل الدخول أولاً | messages.general.unauthorized |
+| \app/Http/Controllers\WeeklyReportController.php | 28 | بيانات الطالب غير مكتملة | messages.auth.incomplete_student_data |
+| \app/Http/Controllers\WeeklyReportController.php | 73 | تم إرسال التقرير بنجاح | messages.report.submitted |
+| \app/Http/Controllers\WeeklyReportController.php | 100 | بيانات الطالب غير مكتملة | messages.auth.incomplete_student_data |
+| \app/Http/Controllers\WeeklyReportController.php | 137 | بيانات المشرف غير مكتملة | messages.auth.incomplete_supervisor_data |
+| \app/Http/Controllers\WeeklyReportController.php | 149 | لا يوجد طلاب تابعين لك حالياً | messages.report.no_students |
+| \app/Http/Controllers\WeeklyReportController.php | 173 | بيانات المشرف غير مكتملة | messages.auth.incomplete_supervisor_data |
+| \app/Http/Controllers\WeeklyReportController.php | 192 | تم مراجعة التقرير | messages.report.reviewed |
+| \app/Http/Controllers\WeeklyReportController.php | 204 | بيانات المشرف غير مكتملة | messages.auth.incomplete_supervisor_data |
+| \app/Http/Controllers\WeeklyReportController.php | 215 | لا يوجد طلاب مسندين إليك حالياً | messages.report.no_assigned_students |
+
+## ⚠️ نصوص بدون mapping
+
+يجب إضافة هذه النصوص إلى `app/Services/LanguageMapper.php`
+
+| الملف | السطر | النص |
+|------|-------|------|
+| \app/Http/Controllers\AIReportController.php | 41 | /[.!?؟。]+/ |
+| \app/Http/Controllers\AIReportController.php | 98 | إليك النسخة المحسنة |
+| \app/Http/Controllers\AIReportController.php | 144 | حدث خطأ أثناء الاتصال بالذكاء الاصطناعي: |
+| \app/Http/Controllers\AIReportController.php | 240 | محتوى جيد |
+| \app/Http/Controllers\AIReportController.php | 240 | تنظيم واضح |
+| \app/Http/Controllers\AIReportController.php | 243 | يحتاج لمزيد من التفاصيل |
+| \app/Http/Controllers\AIReportController.php | 246 | أضف أمثلة عملية |
+| \app/Http/Controllers\AIReportController.php | 246 | استخدم مصطلحات تقنية |
+| \app/Http/Controllers\AIReportController.php | 249 | التقرير جيد بشكل عام ولكن يمكن تحسينه بإضافة المزيد من التفاصيل التقنية والأمثلة العملية. |
+| \app/Http/Controllers\AIReportController.php | 293 | حدث خطأ أثناء الاتصال بالذكاء الاصطناعي: |
+| \app/Http/Controllers\AIReportController.php | 354 | إليك التقرير |
+| \app/Http/Controllers\AIReportController.php | 413 | حدث خطأ أثناء الاتصال بالذكاء الاصطناعي: |
+| \app/Http/Controllers\AIReportController.php | 549 | تعلم أساسيات المجال |
+| \app/Http/Controllers\AIReportController.php | 549 | مراجعة الوثائق التقنية |
+| \app/Http/Controllers\AIReportController.php | 549 | المشاركة في اجتماعات الفريق |
+| \app/Http/Controllers\AIReportController.php | 552 | قراءة الوثائق |
+| \app/Http/Controllers\AIReportController.php | 552 | حضور اجتماع |
+| \app/Http/Controllers\AIReportController.php | 552 | تنفيذ مهمة بسيطة |
+| \app/Http/Controllers\AIReportController.php | 555 | فهم بيئة العمل |
+| \app/Http/Controllers\AIReportController.php | 555 | التعامل مع أدوات جديدة |
+| \app/Http/Controllers\AIReportController.php | 558 | التواصل المهني |
+| \app/Http/Controllers\AIReportController.php | 558 | إدارة الوقت |
+| \app/Http/Controllers\AIReportController.php | 561 | استخدم مصطلحات تقنية |
+| \app/Http/Controllers\AIReportController.php | 561 | اذكر التحديات والحلول |
+| \app/Http/Controllers\AIReportController.php | 564 | تعلمت أساسيات المجال |
+| \app/Http/Controllers\AIReportController.php | 564 | شاركت في اجتماع الفريق |
+| \app/Http/Controllers\AIReportController.php | 595 | حدث خطأ أثناء الاتصال بالذكاء الاصطناعي: |
+| \app/Http/Controllers\AdminController.php | 58 | تم تعيين المشرف بنجاح |
+| \app/Http/Controllers\AdminController.php | 77 | تم تحديث السجل |
+| \app/Http/Controllers\AuthController.php | 161 | تم رفض حسابك. |
+| \app/Http/Controllers\EvaluationCalculationController.php | 55 | الطالب غير موجود |
+| \app/Http/Controllers\EvaluationCalculationController.php | 64 | الفرصة غير موجودة |
+| \app/Http/Controllers\EvaluationCalculationController.php | 77 | لم يتم قبول هذا الطالب في هذه الفرصة بعد. يجب أن يكون التقديم بحالة accepted. |
+| \app/Http/Controllers\EvaluationCalculationController.php | 87 | لم يكتمل التقييم بعد. يجب أن يكون هناك تقييم نهائي من المزود والمشرف. |
+| \app/Http/Controllers\EvaluationCalculationController.php | 101 | تم حساب التقييم النهائي وإنشاء السجل بنجاح |
+| \app/Http/Controllers\EvaluationCalculationController.php | 111 | حدث خطأ: |
+| \app/Http/Controllers\EvaluationCalculationController.php | 144 | حدث خطأ: |
+| \app/Http/Controllers\EvaluationCalculationController.php | 162 | لا توجد سجلات تقييم بعد |
+| \app/Http/Controllers\EvaluationCalculationController.php | 206 | حدث خطأ: |
+| \app/Http/Controllers\VerifyEmailController.php | 18 | يرجى التحقق من بريدك الإلكتروني. تم إرسال رابط التحقق إليك. |
+| \app/Http/Controllers\VerifyEmailController.php | 30 | رابط التحقق غير صالح أو منتهي الصلاحية |
+| \app/Http/Controllers\VerifyEmailController.php | 39 | المستخدم غير موجود |
+| \app/Http/Controllers\VerifyEmailController.php | 46 | رابط التحقق غير صالح |
+| \app/Http/Controllers\VerifyEmailController.php | 53 | البريد الإلكتروني موثق بالفعل |
+| \app/Http/Controllers\VerifyEmailController.php | 85 | بريدك الإلكتروني موثق بالفعل |
+| \app/Http/Controllers\VerifyEmailController.php | 92 | تم إرسال رابط التحقق مرة أخرى |
+| \app/Http/Controllers\WeeklyReportController.php | 87 | حدث خطأ في حفظ التقرير: |
+
+## 🎯 الأوامر التالية
+
+```bash
+# معاينة التغييرات
+php artisan lang:preview --controller=OpportunityController.php
+
+# تطبيق التغييرات مع نسخة احتياطية
+php artisan lang:replace --controller=OpportunityController.php --backup
+
+# توليد مفاتيح جديدة
+php artisan lang:generate --path=app
+```

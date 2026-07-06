@@ -46,6 +46,10 @@ class CertificateService
             // Prepare data for the template
             $data = [
                 'studentName' => $student->user->name,
+                'studentId' => $student->student_id ?? 'N/A',
+                'studentMajor' => $student->major ?? 'N/A',
+                'studentUniversity' => $student->university ?? 'N/A',
+                'studentYear' => $student->year_of_study ?? 'N/A',
                 'opportunityTitle' => $opportunity->title,
                 'providerName' => $opportunity->provider->organization_name ?? 'Not Specified',
                 'supervisorName' => $supervisor?->user->name ?? 'Not Specified',
@@ -56,17 +60,25 @@ class CertificateService
                 'gradeStatus' => $this->getGradeStatus($record->final_grade),
                 'certificateNumber' => $certificateNumber,
                 'issueDate' => now()->format('Y/m/d'),
+                'issueDateFormatted' => now()->format('F d, Y'),
             ];
 
             // Generate PDF
             $pdf = Pdf::loadView('certificates.certificate', $data);
 
             // PDF settings
+
             $pdf->setPaper('a4', 'landscape');
             $pdf->setOptions([
                 'isHtml5ParserEnabled' => true,
                 'isRemoteEnabled' => true,
                 'defaultFont' => 'DejaVu Sans',
+                'fontDir' => storage_path('fonts'),
+                'fontCache' => storage_path('fonts'),
+                'tempDir' => storage_path('app/temp'),
+                'isFontSubsettingEnabled' => true,
+                'defaultPaperSize' => 'a4',
+                'defaultMediaType' => 'print',
             ]);
 
             // Save the certificate

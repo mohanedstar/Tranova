@@ -15,7 +15,7 @@ class EvaluationController extends Controller
         $provider = $request->user()->provider;
 
         if (!$provider) {
-            return response()->json(['message' => 'بيانات المزود غير مكتملة'], 400);
+            return response()->json(['message' => __('messages.auth.incomplete_provider_data')], 400);
         }
 
         $validated = $request->validate([
@@ -38,7 +38,7 @@ class EvaluationController extends Controller
             ->first();
 
         if (!$opportunity) {
-            return response()->json(['message' => 'غير مصرح - هذه الفرصة لا تابعة لك'], 403);
+            return response()->json(['message' => __('messages.evaluation.unauthorized_opportunity')], 403);
         }
 
         // ✅ التحقق من أن الطالب مقبول في الفرصة
@@ -48,7 +48,7 @@ class EvaluationController extends Controller
             ->first();
 
         if (!$application) {
-            return response()->json(['message' => 'الطالب غير مقبول في هذه الفرصة'], 403);
+            return response()->json(['message' => __('messages.evaluation.student_not_accepted')], 403);
         }
 
         $validated['evaluator_type'] = 'provider';
@@ -71,7 +71,7 @@ class EvaluationController extends Controller
         $evaluation = Evaluation::create($validated);
 
         return response()->json([
-            'message' => 'تم حفظ التقييم',
+            'message' => __('messages.evaluation.saved'),
             'evaluation' => $evaluation
         ], 201);
     }
@@ -82,7 +82,7 @@ class EvaluationController extends Controller
         $supervisor = $request->user()->supervisor;
 
         if (!$supervisor) {
-            return response()->json(['message' => 'بيانات المشرف غير مكتملة'], 400);
+            return response()->json(['message' => __('messages.auth.incomplete_supervisor_data')], 400);
         }
 
         $validated = $request->validate([
@@ -100,7 +100,7 @@ class EvaluationController extends Controller
             ->exists();
 
         if (!$isAssigned) {
-            return response()->json(['message' => 'غير مصرح - هذا الطالب ليس تابعاً لك'], 403);
+            return response()->json(['message' => __('messages.evaluation.unauthorized_student')], 403);
         }
 
         // ✅ التحقق من أن الطالب مقبول في الفرصة
@@ -110,7 +110,7 @@ class EvaluationController extends Controller
             ->first();
 
         if (!$application) {
-            return response()->json(['message' => 'الطالب غير مقبول في هذه الفرصة'], 403);
+            return response()->json(['message' => __('messages.evaluation.student_not_accepted')], 403);
         }
 
         $validated['evaluator_type'] = 'supervisor';
@@ -129,7 +129,7 @@ class EvaluationController extends Controller
         $evaluation = Evaluation::create($validated);
 
         return response()->json([
-            'message' => 'تم حفظ التقييم',
+            'message' => __('messages.evaluation.saved'),
             'evaluation' => $evaluation
         ], 201);
     }
@@ -140,7 +140,7 @@ class EvaluationController extends Controller
         $student = $request->user()->student;
 
         if (!$student) {
-            return response()->json(['message' => 'بيانات الطالب غير مكتملة'], 400);
+            return response()->json(['message' => __('messages.auth.incomplete_student_data')], 400);
         }
 
         $evaluations = Evaluation::where('student_id', $student->id)

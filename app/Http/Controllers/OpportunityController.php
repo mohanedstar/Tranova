@@ -111,14 +111,14 @@ class OpportunityController extends Controller
         // ✅ التحقق من وجود provider record
         if (!$provider) {
             return response()->json([
-                'message' => 'بيانات المزود غير مكتملة'
+                'message' => __('messages.auth.incomplete_provider_data')
             ], 400);
         }
 
         // ✅ التحقق من حالة حساب المزود (يجب أن يكون active)
         if ($providerUser->account_status !== 'active') {
             return response()->json([
-                'message' => 'حسابك قيد المراجعة أو مرفوض. لا يمكنك نشر فرص تدريبية حتى تتم الموافقة على حسابك.',
+                'message' => __('messages.opportunity.account_not_active'),
                 'account_status' => $providerUser->account_status,
             ], 403);
         }
@@ -146,7 +146,7 @@ class OpportunityController extends Controller
         $opportunity = InternshipOpportunity::create($validated);
 
         return response()->json([
-            'message' => 'تم إنشاء الفرصة بنجاح',
+            'message' => __('messages.opportunity.created'),
             'opportunity' => $opportunity
         ], 201);
     }
@@ -161,20 +161,20 @@ class OpportunityController extends Controller
 
         // ✅ التحقق من وجود provider record
         if (!$provider) {
-            return response()->json(['message' => 'بيانات المزود غير مكتملة'], 400);
+            return response()->json(['message' => __('messages.auth.incomplete_provider_data')], 400);
         }
 
         // ✅ التحقق من حالة الحساب
         if ($providerUser->account_status !== 'active') {
             return response()->json([
-                'message' => 'حسابك غير نشط. لا يمكنك تعديل الفرص.',
+                'message' => __('messages.opportunity.cannot_modify'),
                 'account_status' => $providerUser->account_status,
             ], 403);
         }
 
         // التحقق من أن الفرصة تعود للمزود الحالي
         if ($opportunity->provider_id !== $provider->id) {
-            return response()->json(['message' => 'غير مصرح'], 403);
+            return response()->json(['message' => __('messages.general.unauthorized')], 403);
         }
 
         $validated = $request->validate([
@@ -191,7 +191,7 @@ class OpportunityController extends Controller
         $opportunity->update($validated);
 
         return response()->json([
-            'message' => 'تم تحديث الفرصة بنجاح',
+            'message' => __('messages.opportunity.updated'),
             'opportunity' => $opportunity
         ]);
     }
@@ -206,25 +206,25 @@ class OpportunityController extends Controller
 
         // ✅ التحقق من وجود provider record
         if (!$provider) {
-            return response()->json(['message' => 'بيانات المزود غير مكتملة'], 400);
+            return response()->json(['message' => __('messages.auth.incomplete_provider_data')], 400);
         }
 
         // ✅ التحقق من حالة الحساب
         if ($providerUser->account_status !== 'active') {
             return response()->json([
-                'message' => 'حسابك غير نشط. لا يمكنك إغلاق الفرص.',
+                'message' => __('messages.opportunity.cannot_close'),
                 'account_status' => $providerUser->account_status,
             ], 403);
         }
 
         if ($opportunity->provider_id !== $provider->id) {
-            return response()->json(['message' => 'غير مصرح'], 403);
+            return response()->json(['message' => __('messages.general.unauthorized')], 403);
         }
 
         $opportunity->update(['status' => 'closed']);
 
         return response()->json([
-            'message' => 'تم إغلاق الفرصة بنجاح',
+            'message' => __('messages.opportunity.closed'),
             'opportunity' => $opportunity
         ]);
     }
@@ -239,39 +239,39 @@ class OpportunityController extends Controller
 
         // ✅ التحقق من وجود provider record
         if (!$provider) {
-            return response()->json(['message' => 'بيانات المزود غير مكتملة'], 400);
+            return response()->json(['message' => __('messages.auth.incomplete_provider_data')], 400);
         }
 
         // ✅ التحقق من حالة الحساب
         if ($providerUser->account_status !== 'active') {
             return response()->json([
-                'message' => 'حسابك غير نشط. لا يمكنك إعادة فتح الفرص.',
+                'message' => __('messages.opportunity.cannot_reopen'),
                 'account_status' => $providerUser->account_status,
             ], 403);
         }
 
         if ($opportunity->provider_id !== $provider->id) {
-            return response()->json(['message' => 'غير مصرح'], 403);
+            return response()->json(['message' => __('messages.general.unauthorized')], 403);
         }
 
         // التحقق من أن الفرصة مغلقة
         if ($opportunity->status !== 'closed') {
             return response()->json([
-                'message' => 'يمكن إعادة فتح الفرصة المغلقة فقط'
+                'message' => __('messages.opportunity.cannot_reopen_closed')
             ], 400);
         }
 
         // التحقق من أن الموعد النهائي لم ينتهي
         if ($opportunity->application_deadline < now()) {
             return response()->json([
-                'message' => 'لا يمكن إعادة فتح الفرصة - الموعد النهائي قد انتهى'
+                'message' => __('messages.opportunity.deadline_passed')
             ], 400);
         }
 
         $opportunity->update(['status' => 'open']);
 
         return response()->json([
-            'message' => 'تم إعادة فتح الفرصة بنجاح',
+            'message' => __('messages.opportunity.reopened'),
             'opportunity' => $opportunity
         ]);
     }
@@ -287,7 +287,7 @@ class OpportunityController extends Controller
         // ✅ التحقق من وجود provider record
         if (!$provider) {
             return response()->json([
-                'message' => 'بيانات المزود غير مكتملة',
+                'message' => __('messages.auth.incomplete_provider_data'),
                 'opportunities' => []
             ], 400);
         }

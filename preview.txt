@@ -1,0 +1,77 @@
+# Preview
+
+- Ready changes: 18
+- Unmapped: 0
+
+### \app/Http/Controllers/OpportunityController.php:114
+- Original: `بيانات المزود غير مكتملة`
+- Replace: `__('messages.auth.incomplete_provider_data')`
+
+### \app/Http/Controllers/OpportunityController.php:121
+- Original: `حسابك قيد المراجعة أو مرفوض. لا يمكنك نشر فرص تدريبية حتى تتم الموافقة على حسابك.`
+- Replace: `__('messages.opportunity.account_not_active')`
+
+### \app/Http/Controllers/OpportunityController.php:149
+- Original: `تم إنشاء الفرصة بنجاح`
+- Replace: `__('messages.opportunity.created')`
+
+### \app/Http/Controllers/OpportunityController.php:164
+- Original: `بيانات المزود غير مكتملة`
+- Replace: `__('messages.auth.incomplete_provider_data')`
+
+### \app/Http/Controllers/OpportunityController.php:170
+- Original: `حسابك غير نشط. لا يمكنك تعديل الفرص.`
+- Replace: `__('messages.opportunity.cannot_modify')`
+
+### \app/Http/Controllers/OpportunityController.php:177
+- Original: `غير مصرح`
+- Replace: `__('messages.general.unauthorized')`
+
+### \app/Http/Controllers/OpportunityController.php:194
+- Original: `تم تحديث الفرصة بنجاح`
+- Replace: `__('messages.opportunity.updated')`
+
+### \app/Http/Controllers/OpportunityController.php:209
+- Original: `بيانات المزود غير مكتملة`
+- Replace: `__('messages.auth.incomplete_provider_data')`
+
+### \app/Http/Controllers/OpportunityController.php:215
+- Original: `حسابك غير نشط. لا يمكنك إغلاق الفرص.`
+- Replace: `__('messages.opportunity.cannot_close')`
+
+### \app/Http/Controllers/OpportunityController.php:221
+- Original: `غير مصرح`
+- Replace: `__('messages.general.unauthorized')`
+
+### \app/Http/Controllers/OpportunityController.php:227
+- Original: `تم إغلاق الفرصة بنجاح`
+- Replace: `__('messages.opportunity.closed')`
+
+### \app/Http/Controllers/OpportunityController.php:242
+- Original: `بيانات المزود غير مكتملة`
+- Replace: `__('messages.auth.incomplete_provider_data')`
+
+### \app/Http/Controllers/OpportunityController.php:248
+- Original: `حسابك غير نشط. لا يمكنك إعادة فتح الفرص.`
+- Replace: `__('messages.opportunity.cannot_reopen')`
+
+### \app/Http/Controllers/OpportunityController.php:254
+- Original: `غير مصرح`
+- Replace: `__('messages.general.unauthorized')`
+
+### \app/Http/Controllers/OpportunityController.php:260
+- Original: `يمكن إعادة فتح الفرصة المغلقة فقط`
+- Replace: `__('messages.opportunity.cannot_reopen_closed')`
+
+### \app/Http/Controllers/OpportunityController.php:267
+- Original: `لا يمكن إعادة فتح الفرصة - الموعد النهائي قد انتهى`
+- Replace: `__('messages.opportunity.deadline_passed')`
+
+### \app/Http/Controllers/OpportunityController.php:274
+- Original: `تم إعادة فتح الفرصة بنجاح`
+- Replace: `__('messages.opportunity.reopened')`
+
+### \app/Http/Controllers/OpportunityController.php:290
+- Original: `بيانات المزود غير مكتملة`
+- Replace: `__('messages.auth.incomplete_provider_data')`
+

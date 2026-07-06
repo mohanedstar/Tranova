@@ -23,6 +23,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'rejection_reason',
         'reviewed_at',
         'reviewed_by',
+        'preferred_language'
     ];
 
     protected $hidden = [

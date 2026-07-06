@@ -25,7 +25,7 @@ public function store(StoreWeeklyReportRequest $request)
         Log::error('Student record not found', ['user_id' => $request->user()->id]);
         return response()->json([
             'success' => false,
-            'message' => 'بيانات الطالب غير مكتملة'
+            'message' => __('messages.auth.incomplete_student_data')
         ], 400);
     }
 
@@ -70,7 +70,7 @@ public function store(StoreWeeklyReportRequest $request)
 
         return response()->json([
             'success' => true,
-            'message' => 'تم إرسال التقرير بنجاح',
+            'message' => __('messages.report.submitted'),
             'report' => $report
         ], 201);
 
@@ -84,7 +84,7 @@ public function store(StoreWeeklyReportRequest $request)
 
         return response()->json([
             'success' => false,
-            'message' => 'حدث خطأ في حفظ التقرير: ' . $e->getMessage(),
+            'message' => __('messages.report.save_error_prefix') . $e->getMessage(),
         ], 500);
     }
 }
@@ -97,7 +97,7 @@ public function store(StoreWeeklyReportRequest $request)
         // ✅ التحقق من وجود الطالب
         if (!$student) {
             return response()->json([
-                'message' => 'بيانات الطالب غير مكتملة',
+                'message' => __('messages.auth.incomplete_student_data'),
                 'reports' => []
             ], 400);
         }
@@ -134,7 +134,7 @@ public function store(StoreWeeklyReportRequest $request)
         // ✅ التحقق من وجود المشرف
         if (!$supervisor) {
             return response()->json([
-                'message' => 'بيانات المشرف غير مكتملة',
+                'message' => __('messages.auth.incomplete_supervisor_data'),
                 'reports' => []
             ], 400);
         }
@@ -146,7 +146,7 @@ public function store(StoreWeeklyReportRequest $request)
             return response()->json([
                 'success' => true,
                 'reports' => [],
-                'message' => 'لا يوجد طلاب تابعين لك حالياً'
+                'message' => __('messages.report.no_students')
             ]);
         }
 
@@ -170,7 +170,7 @@ public function store(StoreWeeklyReportRequest $request)
         // ✅ التحقق من وجود المشرف
         if (!$supervisor) {
             return response()->json([
-                'message' => 'بيانات المشرف غير مكتملة'
+                'message' => __('messages.auth.incomplete_supervisor_data')
             ], 400);
         }
 
@@ -189,7 +189,7 @@ public function store(StoreWeeklyReportRequest $request)
         ]);
 
         return response()->json([
-            'message' => 'تم مراجعة التقرير',
+            'message' => __('messages.report.reviewed'),
             'report' => $report
         ]);
     }
@@ -201,7 +201,7 @@ public function lateStudents(Request $request)
 
     if (!$supervisor) {
         return response()->json([
-            'message' => 'بيانات المشرف غير مكتملة'
+            'message' => __('messages.auth.incomplete_supervisor_data')
         ], 400);
     }
 
@@ -212,7 +212,7 @@ public function lateStudents(Request $request)
         return response()->json([
             'success' => true,
             'late_students' => [],
-            'message' => 'لا يوجد طلاب مسندين إليك حالياً'
+            'message' => __('messages.report.no_assigned_students')
         ]);
     }
 

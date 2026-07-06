@@ -28,7 +28,7 @@ class MessageController extends Controller
 
 
         return response()->json([
-            'message' => 'تم إرسال الرسالة',
+            'message' => __('messages.message.sent'),
             'data' => $message->load('sender', 'receiver')
         ], 201);
     }
@@ -59,7 +59,7 @@ class MessageController extends Controller
     public function markAsRead(Message $message, Request $request)
     {
         if ($message->receiver_id !== $request->user()->id) {
-            return response()->json(['message' => 'غير مصرح'], 403);
+            return response()->json(['message' => __('messages.general.unauthorized')], 403);
         }
 
         $message->update([
@@ -67,6 +67,6 @@ class MessageController extends Controller
             'read_at' => now(),
         ]);
 
-        return response()->json(['message' => 'تم التعليم كمقروءة']);
+        return response()->json(['message' => __('messages.message.marked_read')]);
     }
 }

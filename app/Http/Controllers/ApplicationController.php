@@ -19,7 +19,7 @@ class ApplicationController extends Controller
 
         // التحقق من أن الفرصة لا تزال مفتوحة
         if ($opportunity->status !== 'open' || $opportunity->application_deadline < now()) {
-            return response()->json(['message' => 'الفرصة لم تعد متاحة'], 400);
+            return response()->json(['message' => __('messages.opportunity.not_available')], 400);
         }
 
         // التحقق من عدم التقديم مسبقاً
@@ -28,7 +28,7 @@ class ApplicationController extends Controller
             ->exists();
 
         if ($exists) {
-            return response()->json(['message' => 'لقد قدمت على هذه الفرصة مسبقاً'], 400);
+            return response()->json(['message' => __('messages.opportunity.already_applied')], 400);
         }
 
         $validated = $request->validated();
@@ -54,7 +54,7 @@ class ApplicationController extends Controller
         $provider->user->notify(new \App\Notifications\NewApplicationReceived($application));
 
         return response()->json([
-            'message' => 'تم التقديم بنجاح',
+            'message' => __('messages.application.submitted'),
             'application' => $application->load('opportunity.provider.user')
         ], 201);
     }
@@ -79,7 +79,7 @@ class ApplicationController extends Controller
     public function indexForOpportunity(Request $request, InternshipOpportunity $opportunity)
     {
         if ($opportunity->provider_id !== $request->user()->provider->id) {
-            return response()->json(['message' => 'غير مصرح'], 403);
+            return response()->json(['message' => __('messages.general.unauthorized')], 403);
         }
 
         $applications = Application::where('opportunity_id', $opportunity->id)
@@ -98,7 +98,7 @@ class ApplicationController extends Controller
         $provider = $request->user()->provider;
 
         if ($application->opportunity->provider_id !== $provider->id) {
-            return response()->json(['message' => 'غير مصرح'], 403);
+            return response()->json(['message' => __('messages.general.unauthorized')], 403);
         }
 
         $request->validate([
@@ -125,7 +125,7 @@ class ApplicationController extends Controller
         }
 
         return response()->json([
-            'message' => 'تم تحديث حالة التقديم',
+            'message' => __('messages.application.status_updated'),
             'application' => $application
         ]);
     }
@@ -136,12 +136,12 @@ class ApplicationController extends Controller
     public function withdraw(Request $request, Application $application)
     {
         if ($application->student_id !== $request->user()->student->id) {
-            return response()->json(['message' => 'غير مصرح'], 403);
+            return response()->json(['message' => __('messages.general.unauthorized')], 403);
         }
 
         $application->update(['status' => 'withdrawn']);
 
-        return response()->json(['message' => 'تم الانسحاب بنجاح']);
+        return response()->json(['message' => __('messages.application.withdrawn')]);
     }
 
     /**
@@ -156,7 +156,7 @@ class ApplicationController extends Controller
 
         if (!$provider) {
             return response()->json([
-                'message' => 'بيانات المزود غير مكتملة'
+                'message' => __('messages.auth.incomplete_provider_data')
             ], 400);
         }
 
@@ -170,7 +170,7 @@ class ApplicationController extends Controller
 
         if (!$application) {
             return response()->json([
-                'message' => 'لا توجد بيانات تقديم لهذا الطالب لدى مؤسستك'
+                'message' => __('messages.application.no_application_found')
             ], 404);
         }
 

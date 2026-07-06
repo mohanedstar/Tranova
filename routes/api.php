@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\OpportunityController;
 use App\Http\Controllers\ApplicationController;
@@ -15,6 +16,8 @@ use App\Http\Controllers\EvaluationCalculationController;
 use App\Http\Controllers\VerifyEmailController;
 use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\AdminProviderController;
+use App\Http\Controllers\AdminUserController;
+
 
 // ==================== Public Routes ====================
 Route::post('/register', [AuthController::class, 'register']);
@@ -29,7 +32,8 @@ Route::prefix('password')->middleware('throttle:5,1')->group(function () {
     Route::post('/verify-token', [PasswordResetController::class, 'verifyToken']);
     Route::post('/reset', [PasswordResetController::class, 'resetPassword']);
 });
-   // ==================== Email Verification Routes ====================
+
+// ==================== Email Verification Routes ====================
 Route::prefix('email')->group(function () {
     Route::get('/verify/{id}/{hash}', [VerifyEmailController::class, 'verify'])
         ->middleware(['signed', 'throttle:6,1'])
@@ -55,6 +59,31 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/supervisor/dashboard', [DashboardController::class, 'supervisorDashboard'])->middleware('role:supervisor');
     Route::get('/admin/dashboard', [DashboardController::class, 'adminDashboard'])->middleware('role:admin');
 
+    // ==================== Language Settings ====================
+    Route::post('/user/language', function (Request $request) {
+        $request->validate([
+            'language' => 'required|in:ar,en',
+        ]);
+
+        $user = $request->user();
+        $user->preferred_language = $request->language;
+        $saved = $user->save();
+
+        \Illuminate\Support\Facades\Log::info('Language Updated', [
+            'user_id' => $user->id,
+            'language' => $request->language,
+            'saved' => $saved,
+            'preferred_language' => $user->preferred_language,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => __('messages.general.language_updated'),
+            'language' => $user->preferred_language,
+            'saved' => $saved,
+        ]);
+    });
+
     // ==================== Student Routes ====================
     Route::middleware('role:student')->prefix('student')->group(function () {
         // Applications
@@ -75,16 +104,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/certificates/download', [CertificateController::class, 'downloadMyCertificate']);
         Route::get('/certificates/preview', [CertificateController::class, 'previewMyCertificate']);
 
-
-        // ✅ ميزة الذكاء الاصطناعي (AI)
+        // AI Features
         Route::prefix('ai')->group(function () {
             Route::post('/reports/improve', [\App\Http\Controllers\AIReportController::class, 'improveReport']);
-            Route::post('/reports/analyze', [\App\Http\Controllers\AIReportController::class, 'analyzeReport']); // ✅ الميزة B
-            Route::post('/reports/generate', [\App\Http\Controllers\AIReportController::class, 'generateReport']); // ✅ الميزة C
-           Route::post('/reports/suggest', [\App\Http\Controllers\AIReportController::class, 'suggestContent']);
-
+            Route::post('/reports/analyze', [\App\Http\Controllers\AIReportController::class, 'analyzeReport']);
+            Route::post('/reports/generate', [\App\Http\Controllers\AIReportController::class, 'generateReport']);
+            Route::post('/reports/suggest', [\App\Http\Controllers\AIReportController::class, 'suggestContent']);
         });
-
     });
 
     // ==================== Provider Routes ====================
@@ -126,16 +152,27 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/evaluations/statistics', [EvaluationCalculationController::class, 'statistics']);
         Route::post('/students/{studentId}/opportunities/{opportunityId}/calculate', [EvaluationCalculationController::class, 'calculateAndCreateRecord']);
 
+        // ✅ Provider Management (group منفصل)
+        Route::prefix('providers')->group(function () {
+            Route::get('/pending', [AdminProviderController::class, 'pendingProviders']);
+            Route::get('/', [AdminProviderController::class, 'allProviders']);
+            Route::post('/{providerId}/approve', [AdminProviderController::class, 'approveProvider']);
+            Route::post('/{providerId}/reject', [AdminProviderController::class, 'rejectProvider']);
+        });
 
-    // ✅ إدارة حسابات المزودين (جديد)
-    Route::prefix('providers')->group(function () {
-        Route::get('/pending', [AdminProviderController::class, 'pendingProviders']);
-        Route::get('/', [AdminProviderController::class, 'allProviders']);
-        Route::post('/{providerId}/approve', [AdminProviderController::class, 'approveProvider']);
-        Route::post('/{providerId}/reject', [AdminProviderController::class, 'rejectProvider']);
-    });
+        // ✅ User Management (group منفصل)
+        Route::prefix('users')->group(function () {
+            Route::get('/', [AdminUserController::class, 'index']);
+            Route::get('/{user}', [AdminUserController::class, 'show']);
+            Route::post('/', [AdminUserController::class, 'store']);
+            Route::put('/{user}', [AdminUserController::class, 'update']);
+            Route::delete('/{user}', [AdminUserController::class, 'destroy']);
+            Route::post('/{user}/suspend', [AdminUserController::class, 'suspend']);
+            Route::post('/{user}/activate', [AdminUserController::class, 'activate']);
+            Route::post('/{user}/reset-password', [AdminUserController::class, 'resetPassword']);
+        });
 
-    });
+    }); // ✅ إغلاق admin group
 
     // ==================== Messages (All Authenticated Users) ====================
     Route::prefix('messages')->group(function () {
@@ -155,5 +192,4 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/', [NotificationController::class, 'clearAll']);
     });
 
-
-}); // <--- نهاية مجموعة auth:sanctum
+}); // ✅ إغلاق auth:sanctum group

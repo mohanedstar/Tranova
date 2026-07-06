@@ -70,8 +70,8 @@ class AIReportController extends Controller
         $request->validate([
             'content' => 'required|string|min:10|max:2000',
         ], [
-            'content.required' => 'محتوى التقرير مطلوب.',
-            'content.min' => 'يجب أن يحتوي التقرير على 10 أحرف على الأقل.',
+            'content.required' => __('messages.validation.content_required'),
+            'content.min' => __('messages.validation.content_min'),
         ]);
 
         $originalContent = $request->input('content');
@@ -95,7 +95,7 @@ CRITICAL RULES:
 2. If the original text is in English, your entire response MUST be in English.
 3. If the original text is in Arabic, your entire response MUST be in Arabic.
 4. Do NOT mix languages.
-5. Do NOT add any introductory phrases like 'Here is the improved version' or 'إليك النسخة المحسنة'.
+5. Do NOT add any introductory phrases like 'Here is the improved version' or __('messages.ai.intro_improved').
 6. Return ONLY the improved text, nothing else.
 
 IMPROVEMENT GUIDELINES:
@@ -117,7 +117,7 @@ Improved text (in {$languageName}):";
             if (!$improvedContent) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'لم يتمكن الذكاء الاصطناعي من تحسين النص.'
+                    'message' => __('messages.ai.failed_improve')
                 ], 500);
             }
 
@@ -126,7 +126,7 @@ Improved text (in {$languageName}):";
 
             return response()->json([
                 'success' => true,
-                'message' => 'تم تحسين التقرير بنجاح باستخدام الذكاء الاصطناعي.',
+                'message' => __('messages.ai.improve_success'),
                 'data' => [
                     'original_content' => $originalContent,
                     'improved_content' => $improvedContent,
@@ -141,7 +141,7 @@ Improved text (in {$languageName}):";
             Log::error('AI Report Improvement Error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'حدث خطأ أثناء الاتصال بالذكاء الاصطناعي: ' . $e->getMessage()
+                'message' => __('messages.ai.connection_error_prefix') . $e->getMessage()
             ], 500);
         }
     }
@@ -157,8 +157,8 @@ Improved text (in {$languageName}):";
         $request->validate([
             'content' => 'required|string|min:10|max:5000',
         ], [
-            'content.required' => 'محتوى التقرير مطلوب.',
-            'content.min' => 'يجب أن يحتوي التقرير على 10 أحرف على الأقل.',
+            'content.required' => __('messages.validation.content_required'),
+            'content.min' => __('messages.validation.content_min'),
         ]);
 
         $content = $request->input('content');
@@ -214,7 +214,7 @@ Respond with ONLY the JSON object, no other text.";
             if (!$aiResponse) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'لم يتمكن الذكاء الاصطناعي من تحليل التقرير.'
+                    'message' => __('messages.ai.failed_analyze')
                 ], 500);
             }
 
@@ -232,21 +232,21 @@ Respond with ONLY the JSON object, no other text.";
                 // إذا فشل التحليل، نرجع استجابة افتراضية
                 return response()->json([
                     'success' => true,
-                    'message' => 'تم تحليل التقرير بنجاح.',
+                    'message' => __('messages.ai.analyze_default'),
                     'data' => [
                         'quality_score' => 70,
                         'grade' => 'good',
                         'strengths' => $detectedLanguage === 'arabic'
-                            ? ['محتوى جيد', 'تنظيم واضح']
+                            ? [__('messages.ai.default_strength_content'), __('messages.ai.default_strength_structure')]
                             : ['Good content', 'Clear organization'],
                         'weaknesses' => $detectedLanguage === 'arabic'
-                            ? ['يحتاج لمزيد من التفاصيل']
+                            ? [__('messages.ai.default_weakness_details')]
                             : ['Needs more details'],
                         'improvements' => $detectedLanguage === 'arabic'
-                            ? ['أضف أمثلة عملية', 'استخدم مصطلحات تقنية']
+                            ? [__('messages.ai.default_improvement_examples'), __('messages.ai.default_improvement_terms')]
                             : ['Add practical examples', 'Use technical terms'],
                         'detailed_feedback' => $detectedLanguage === 'arabic'
-                            ? 'التقرير جيد بشكل عام ولكن يمكن تحسينه بإضافة المزيد من التفاصيل التقنية والأمثلة العملية.'
+                            ? __('messages.ai.default_feedback')
                             : 'The report is generally good but can be improved by adding more technical details and practical examples.',
                         'criteria_scores' => [
                             'content_quality' => 70,
@@ -266,7 +266,7 @@ Respond with ONLY the JSON object, no other text.";
 
             return response()->json([
                 'success' => true,
-                'message' => 'تم تحليل التقرير بنجاح باستخدام الذكاء الاصطناعي.',
+                'message' => __('messages.ai.analyze_success'),
                 'data' => [
                     'quality_score' => $analysis['quality_score'] ?? 70,
                     'grade' => $analysis['grade'] ?? 'good',
@@ -290,7 +290,7 @@ Respond with ONLY the JSON object, no other text.";
             Log::error('AI Report Analysis Error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'حدث خطأ أثناء الاتصال بالذكاء الاصطناعي: ' . $e->getMessage()
+                'message' => __('messages.ai.connection_error_prefix') . $e->getMessage()
             ], 500);
         }
     }
@@ -308,11 +308,11 @@ Respond with ONLY the JSON object, no other text.";
             'points.*' => 'required|string|min:3|max:200',
             'context' => 'nullable|string|max:500',
         ], [
-            'points.required' => 'يجب إدخال نقاط التقرير.',
-            'points.min' => 'يجب إدخال نقطتين على الأقل.',
-            'points.max' => 'الحد الأقصى 20 نقطة.',
-            'points.*.required' => 'كل نقطة يجب أن تحتوي على نص.',
-            'points.*.min' => 'كل نقطة يجب أن تحتوي على 3 أحرف على الأقل.',
+            'points.required' => __('messages.validation.points_required'),
+            'points.min' => __('messages.validation.points_min'),
+            'points.max' => __('messages.validation.points_max'),
+            'points.*.required' => __('messages.validation.point_required'),
+            'points.*.min' => __('messages.validation.point_min'),
         ]);
 
         $points = $request->input('points');
@@ -351,7 +351,7 @@ CRITICAL RULES:
 2. If the points are in English, the entire report MUST be in English.
 3. If the points are in Arabic, the entire report MUST be in Arabic.
 4. Do NOT mix languages.
-5. Do NOT add any introductory phrases like 'Here is the report' or 'إليك التقرير'.
+5. Do NOT add any introductory phrases like 'Here is the report' or __('messages.ai.intro_report').
 6. Return ONLY the report content, nothing else.
 
 REPORT STRUCTURE:
@@ -382,7 +382,7 @@ Generate the complete professional report (in {$languageName}):";
             if (!$generatedReport) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'لم يتمكن الذكاء الاصطناعي من توليد التقرير.'
+                    'message' => __('messages.ai.failed_generate')
                 ], 500);
             }
 
@@ -394,7 +394,7 @@ Generate the complete professional report (in {$languageName}):";
 
             return response()->json([
                 'success' => true,
-                'message' => 'تم توليد التقرير بنجاح باستخدام الذكاء الاصطناعي.',
+                'message' => __('messages.ai.generate_success'),
                 'data' => [
                     'input_points' => $points,
                     'context' => $context,
@@ -410,7 +410,7 @@ Generate the complete professional report (in {$languageName}):";
             Log::error('AI Report Generation Error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'حدث خطأ أثناء الاتصال بالذكاء الاصطناعي: ' . $e->getMessage()
+                'message' => __('messages.ai.connection_error_prefix') . $e->getMessage()
             ], 500);
         }
     }
@@ -429,7 +429,7 @@ Generate the complete professional report (in {$languageName}):";
             'week_number' => 'nullable|integer|min:1|max:52',
             'language' => 'nullable|in:arabic,english',
         ], [
-            'major.required' => 'التخصص مطلوب.',
+            'major.required' => __('messages.validation.major_required'),
         ]);
 
         $major = $request->input('major');
@@ -527,7 +527,7 @@ Generate the suggestions (in {$languageName}):";
             if (!$aiResponse) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'لم يتمكن الذكاء الاصطناعي من توليد الاقتراحات.'
+                    'message' => __('messages.ai.failed_suggest')
                 ], 500);
             }
 
@@ -543,25 +543,25 @@ Generate the suggestions (in {$languageName}):";
                 // استجابة افتراضية
                 return response()->json([
                     'success' => true,
-                    'message' => 'تم توليد الاقتراحات بنجاح.',
+                    'message' => __('messages.ai.suggest_default'),
                     'data' => [
                         'suggested_topics' => $language === 'arabic'
-                            ? ['تعلم أساسيات المجال', 'مراجعة الوثائق التقنية', 'المشاركة في اجتماعات الفريق']
+                            ? [__('messages.ai.default_topic_1'), __('messages.ai.default_topic_2'), __('messages.ai.default_topic_3')]
                             : ['Learn field fundamentals', 'Review technical documentation', 'Participate in team meetings'],
                         'suggested_tasks' => $language === 'arabic'
-                            ? ['قراءة الوثائق', 'حضور اجتماع', 'تنفيذ مهمة بسيطة']
+                            ? [__('messages.ai.default_task_1'), __('messages.ai.default_task_2'), __('messages.ai.default_task_3')]
                             : ['Read documentation', 'Attend meeting', 'Complete simple task'],
                         'suggested_challenges' => $language === 'arabic'
-                            ? ['فهم بيئة العمل', 'التعامل مع أدوات جديدة']
+                            ? [__('messages.ai.default_challenge_1'), __('messages.ai.default_challenge_2')]
                             : ['Understanding work environment', 'Working with new tools'],
                         'suggested_skills_learned' => $language === 'arabic'
-                            ? ['التواصل المهني', 'إدارة الوقت']
+                            ? [__('messages.ai.default_skill_1'), __('messages.ai.default_skill_2')]
                             : ['Professional communication', 'Time management'],
                         'writing_tips' => $language === 'arabic'
-                            ? ['استخدم مصطلحات تقنية', 'اذكر التحديات والحلول']
+                            ? [__('messages.ai.default_improvement_terms'), __('messages.ai.default_tip_2')]
                             : ['Use technical terms', 'Mention challenges and solutions'],
                         'example_bullet_points' => $language === 'arabic'
-                            ? ['تعلمت أساسيات المجال', 'شاركت في اجتماع الفريق']
+                            ? [__('messages.ai.default_example_1'), __('messages.ai.default_example_2')]
                             : ['Learned field fundamentals', 'Participated in team meeting'],
                         'major' => $major,
                         'week_number' => $weekNumber,
@@ -573,7 +573,7 @@ Generate the suggestions (in {$languageName}):";
 
             return response()->json([
                 'success' => true,
-                'message' => 'تم توليد الاقتراحات بنجاح باستخدام الذكاء الاصطناعي.',
+                'message' => __('messages.ai.suggest_success'),
                 'data' => [
                     'suggested_topics' => $suggestions['suggested_topics'] ?? [],
                     'suggested_tasks' => $suggestions['suggested_tasks'] ?? [],
@@ -592,7 +592,7 @@ Generate the suggestions (in {$languageName}):";
             Log::error('AI Suggestions Error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'حدث خطأ أثناء الاتصال بالذكاء الاصطناعي: ' . $e->getMessage()
+                'message' => __('messages.ai.connection_error_prefix') . $e->getMessage()
             ], 500);
         }
     }

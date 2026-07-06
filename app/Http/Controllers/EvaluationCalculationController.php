@@ -27,7 +27,7 @@ class EvaluationCalculationController extends Controller
         $student = $request->user()->student;
 
         if (!$student) {
-            return response()->json(['message' => 'بيانات الطالب غير مكتملة'], 400);
+            return response()->json(['message' => __('messages.auth.incomplete_student_data')], 400);
         }
 
         $evaluation = $this->evaluationService->calculateFinalGrade(
@@ -52,7 +52,7 @@ class EvaluationCalculationController extends Controller
         if (!$student) {
             return response()->json([
                 'success' => false,
-                'message' => 'الطالب غير موجود',
+                'message' => __('messages.evaluation.student_not_found'),
             ], 404);
         }
 
@@ -61,7 +61,7 @@ class EvaluationCalculationController extends Controller
         if (!$opportunity) {
             return response()->json([
                 'success' => false,
-                'message' => 'الفرصة غير موجودة',
+                'message' => __('messages.evaluation.opportunity_not_found'),
             ], 404);
         }
 
@@ -74,7 +74,7 @@ class EvaluationCalculationController extends Controller
         if (!$application) {
             return response()->json([
                 'success' => false,
-                'message' => 'لم يتم قبول هذا الطالب في هذه الفرصة بعد. يجب أن يكون التقديم بحالة accepted.',
+                'message' => __('messages.evaluation.student_not_accepted_yet'),
             ], 400);
         }
 
@@ -84,7 +84,7 @@ class EvaluationCalculationController extends Controller
         if (!$evaluation['is_complete']) {
             return response()->json([
                 'success' => false,
-                'message' => 'لم يكتمل التقييم بعد. يجب أن يكون هناك تقييم نهائي من المزود والمشرف.',
+                'message' => __('messages.evaluation.incomplete_evaluation'),
                 'data' => $evaluation,
             ], 400);
         }
@@ -98,7 +98,7 @@ class EvaluationCalculationController extends Controller
         }
         return response()->json([
             'success' => true,
-            'message' => 'تم حساب التقييم النهائي وإنشاء السجل بنجاح',
+            'message' => __('messages.evaluation.final_calculated'),
             'data' => [
                 'evaluation' => $evaluation,
                 'record' => $record->load('student.user', 'opportunity', 'supervisor.user'),
@@ -108,7 +108,7 @@ class EvaluationCalculationController extends Controller
     } catch (\Exception $e) {
         return response()->json([
             'success' => false,
-            'message' => 'حدث خطأ: ' . $e->getMessage(),
+            'message' => __('messages.general.error_prefix') . $e->getMessage(),
         ], 500);
     }
     }
@@ -141,7 +141,7 @@ class EvaluationCalculationController extends Controller
     } catch (\Exception $e) {
         return response()->json([
             'success' => false,
-            'message' => 'حدث خطأ: ' . $e->getMessage(),
+            'message' => __('messages.general.error_prefix') . $e->getMessage(),
             'file' => $e->getFile(),
             'line' => $e->getLine(),
         ], 500);
@@ -159,7 +159,7 @@ class EvaluationCalculationController extends Controller
         if ($records->isEmpty()) {
             return response()->json([
                 'success' => true,
-                'message' => 'لا توجد سجلات تقييم بعد',
+                'message' => __('messages.evaluation.no_records'),
                 'data' => [
                     'total_records' => 0,
                     'completed' => 0,
@@ -203,7 +203,7 @@ class EvaluationCalculationController extends Controller
         // ✅ عرض الخطأ الفعلي للمساعدة في التشخيص
         return response()->json([
             'success' => false,
-            'message' => 'حدث خطأ: ' . $e->getMessage(),
+            'message' => __('messages.general.error_prefix') . $e->getMessage(),
             'file' => $e->getFile(),
             'line' => $e->getLine(),
         ], 500);

@@ -5,6 +5,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>Certificate of Internship Completion</title>
     <style>
+        /* ✅ خطوط Google للغة الإنجليزية */
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Montserrat:wght@400;600;700&display=swap');
 
         @page {
@@ -13,7 +14,8 @@
         }
 
         body {
-            font-family: 'Montserrat', 'Playfair Display', serif;
+            /* ✅ DejaVu Sans يدعم العربية ومدمج في DomPDF */
+            font-family: 'DejaVu Sans', 'Montserrat', 'Playfair Display', sans-serif;
             margin: 0;
             padding: 0;
             background: #ffffff;
@@ -90,16 +92,29 @@
             letter-spacing: 1px;
         }
 
+        /* ✅ اسم الطالب باللون الأسود */
         .student-name {
             font-size: 36px;
             font-weight: 700;
-            color: #1e3a5f;
+            color: #000000; /* ✅ تم التغيير من #1e3a5f إلى #000000 */
             margin: 15px 0;
-            font-family: 'Playfair Display', serif;
+            font-family: 'DejaVu Sans', 'Playfair Display', serif;
             border-bottom: 2px solid #c9a961;
             display: inline-block;
             padding: 0 30px 10px;
         }
+
+        /* ✅ معلومات الطالب - تدعم العربية */
+    /* ✅ معلومات الطالب - باللون الأسود */
+.student-info {
+    font-size: 14px;
+    color: #000000;  /* ✅ أسود تماماً */
+    margin: 10px 0;
+    font-style: normal;  /* ✅ إزالة italic ليكون أوضح */
+    font-family: 'DejaVu Sans', sans-serif;
+    direction: ltr;
+    font-weight: 500;  /* ✅ سمك متوسط للوضوح */
+}
 
         .description {
             font-size: 16px;
@@ -107,6 +122,7 @@
             color: #444;
             margin: 20px auto;
             max-width: 80%;
+            font-family: 'DejaVu Sans', sans-serif;
         }
 
         .opportunity-title {
@@ -114,7 +130,7 @@
             font-weight: 700;
             color: #1e3a5f;
             margin: 15px 0;
-            font-family: 'Playfair Display', serif;
+            font-family: 'DejaVu Sans', 'Playfair Display', serif;
             font-style: italic;
         }
 
@@ -151,10 +167,12 @@
             color: #333;
         }
 
+        /* ✅ أسماء الموقعين باللون الأسود */
         .signature-name {
             font-weight: 700;
-            color: #1e3a5f;
+            color: #000000; /* ✅ تم التغيير */
             font-size: 15px;
+            font-family: 'DejaVu Sans', sans-serif;
         }
 
         .signature-title {
@@ -188,6 +206,7 @@
             font-size: 14px;
             color: #555;
             margin-top: 10px;
+            font-family: 'DejaVu Sans', sans-serif;
         }
 
         .seal {
@@ -224,7 +243,15 @@
                 <!-- Content -->
                 <div class="content">
                     <div class="presented-to">This is to certify that</div>
+
+                    <!-- ✅ اسم الطالب باللون الأسود -->
                     <div class="student-name">{{ $studentName }}</div>
+
+                    <!-- ✅ معلومات الطالب - تدعم العربية -->
+                    <div class="student-info">
+                        Student ID: {{ $studentId }} | Major: {{ $studentMajor }} | University: {{ $studentUniversity }}
+                    </div>
+
                     <div class="description">
                         has successfully completed the internship program in
                         <div class="opportunity-title">"{{ $opportunityTitle }}"</div>
@@ -254,7 +281,7 @@
                         <div class="date-info">
                             Certificate No: {{ $certificateNumber }}
                             <br>
-                            Issue Date: {{ $issueDate }}
+                            Issue Date: {{ $issueDateFormatted }}
                         </div>
                     </div>
 

@@ -14,6 +14,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EvaluationCalculationController;
 use App\Http\Controllers\VerifyEmailController;
 use App\Http\Controllers\CertificateController;
+use App\Http\Controllers\AdminProviderController;
 
 // ==================== Public Routes ====================
 Route::post('/register', [AuthController::class, 'register']);
@@ -73,6 +74,17 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/certificates', [CertificateController::class, 'myCertificates']);
         Route::get('/certificates/download', [CertificateController::class, 'downloadMyCertificate']);
         Route::get('/certificates/preview', [CertificateController::class, 'previewMyCertificate']);
+
+
+        // ✅ ميزة الذكاء الاصطناعي (AI)
+        Route::prefix('ai')->group(function () {
+            Route::post('/reports/improve', [\App\Http\Controllers\AIReportController::class, 'improveReport']);
+            Route::post('/reports/analyze', [\App\Http\Controllers\AIReportController::class, 'analyzeReport']); // ✅ الميزة B
+            Route::post('/reports/generate', [\App\Http\Controllers\AIReportController::class, 'generateReport']); // ✅ الميزة C
+           Route::post('/reports/suggest', [\App\Http\Controllers\AIReportController::class, 'suggestContent']);
+
+        });
+
     });
 
     // ==================== Provider Routes ====================
@@ -81,10 +93,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/opportunities', [OpportunityController::class, 'store']);
         Route::put('/opportunities/{opportunity}', [OpportunityController::class, 'update']);
         Route::post('/opportunities/{opportunity}/close', [OpportunityController::class, 'close']);
+        Route::post('/opportunities/{opportunity}/reopen', [OpportunityController::class, 'reopen']);
 
         Route::get('/opportunities/{opportunity}/applications', [ApplicationController::class, 'indexForOpportunity']);
         Route::post('/applications/{application}/review', [ApplicationController::class, 'review']);
-
+        Route::get('/applicants/{studentId}/profile', [ApplicationController::class, 'applicantProfile']);
         Route::post('/evaluations', [EvaluationController::class, 'storeProviderEvaluation']);
     });
 
@@ -92,6 +105,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:supervisor')->prefix('supervisor')->group(function () {
         Route::get('/reports', [WeeklyReportController::class, 'studentReports']);
         Route::post('/reports/{report}/review', [WeeklyReportController::class, 'review']);
+        Route::get('/students/late', [WeeklyReportController::class, 'lateStudents']);
 
         Route::post('/evaluations', [EvaluationController::class, 'storeSupervisorEvaluation']);
     });
@@ -111,6 +125,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/evaluations/final', [EvaluationCalculationController::class, 'indexAll']);
         Route::get('/evaluations/statistics', [EvaluationCalculationController::class, 'statistics']);
         Route::post('/students/{studentId}/opportunities/{opportunityId}/calculate', [EvaluationCalculationController::class, 'calculateAndCreateRecord']);
+
+
+    // ✅ إدارة حسابات المزودين (جديد)
+    Route::prefix('providers')->group(function () {
+        Route::get('/pending', [AdminProviderController::class, 'pendingProviders']);
+        Route::get('/', [AdminProviderController::class, 'allProviders']);
+        Route::post('/{providerId}/approve', [AdminProviderController::class, 'approveProvider']);
+        Route::post('/{providerId}/reject', [AdminProviderController::class, 'rejectProvider']);
+    });
+
     });
 
     // ==================== Messages (All Authenticated Users) ====================

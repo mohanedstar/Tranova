@@ -10,7 +10,9 @@ use Illuminate\Support\Facades\Storage;
 
 class ApplicationController extends Controller
 {
-    // تقديم على فرصة (للطالب فقط)
+    /**
+     * تقديم على فرصة (للطالب فقط)
+     */
     public function store(StoreApplicationRequest $request, InternshipOpportunity $opportunity)
     {
         $student = $request->user()->student;
@@ -39,29 +41,27 @@ class ApplicationController extends Controller
             'cv_path' => $cvPath,
             'status' => 'pending',
             'applied_at' => now(),
-
         ]);
 
-              // ✅ إضافة: إرسال إشعار للمدير
+        // ✅ إرسال إشعار للمدير
         $admins = \App\Models\User::where('role', 'admin')->get();
         foreach ($admins as $admin) {
             $admin->notify(new \App\Notifications\NewApplicationPending($application));
         }
 
-
         // إرسال إشعار للمزود
         $provider = $application->opportunity->provider;
         $provider->user->notify(new \App\Notifications\NewApplicationReceived($application));
-
 
         return response()->json([
             'message' => 'تم التقديم بنجاح',
             'application' => $application->load('opportunity.provider.user')
         ], 201);
-
     }
 
-    // عرض تقديمات الطالب
+    /**
+     * عرض تقديمات الطالب
+     */
     public function myApplications(Request $request)
     {
         $student = $request->user()->student;
@@ -73,7 +73,9 @@ class ApplicationController extends Controller
         return response()->json(['applications' => $applications]);
     }
 
-    // عرض المتقدمين لفرصة (للمزود فقط)
+    /**
+     * عرض المتقدمين لفرصة (للمزود فقط)
+     */
     public function indexForOpportunity(Request $request, InternshipOpportunity $opportunity)
     {
         if ($opportunity->provider_id !== $request->user()->provider->id) {
@@ -88,7 +90,9 @@ class ApplicationController extends Controller
         return response()->json(['applications' => $applications]);
     }
 
-    // قبول أو رفض تقديم (للمزود فقط)
+    /**
+     * قبول أو رفض تقديم (للمزود فقط)
+     */
     public function review(Request $request, Application $application)
     {
         $provider = $request->user()->provider;
@@ -111,11 +115,9 @@ class ApplicationController extends Controller
             'provider_notes' => $request->provider_notes,
         ]);
 
-
         // إرسال إشعار للطالب
         $student = $application->student;
         $student->user->notify(new \App\Notifications\ApplicationStatusChanged($application, $request->status));
-
 
         // تحديث عدد المقبولين
         if ($request->status === 'accepted') {
@@ -128,7 +130,9 @@ class ApplicationController extends Controller
         ]);
     }
 
-    // انسحاب من التقديم (للطالب)
+    /**
+     * انسحاب من التقديم (للطالب)
+     */
     public function withdraw(Request $request, Application $application)
     {
         if ($application->student_id !== $request->user()->student->id) {
@@ -138,5 +142,66 @@ class ApplicationController extends Controller
         $application->update(['status' => 'withdrawn']);
 
         return response()->json(['message' => 'تم الانسحاب بنجاح']);
+    }
+
+    /**
+     * ✅ جديد: عرض ملف الطالب الشخصي (US-018)
+     * يسمح للمزود بعرض ملف الطالب الذي تقدم لديه فقط
+     * لا يُرجع أي بيانات خارج نطاق التقديم (مثل التقارير)
+     */
+    public function applicantProfile(Request $request, $studentId)
+    {
+        // ✅ التحقق من وجود provider record
+        $provider = $request->user()->provider;
+
+        if (!$provider) {
+            return response()->json([
+                'message' => 'بيانات المزود غير مكتملة'
+            ], 400);
+        }
+
+        // التحقق من وجود التقديم من هذا الطالب لدى مزود التدريب
+        $application = Application::where('student_id', $studentId)
+            ->whereHas('opportunity', function ($query) use ($provider) {
+                $query->where('provider_id', $provider->id);
+            })
+            ->with(['student.user', 'opportunity'])
+            ->first();
+
+        if (!$application) {
+            return response()->json([
+                'message' => 'لا توجد بيانات تقديم لهذا الطالب لدى مؤسستك'
+            ], 404);
+        }
+
+        $student = $application->student;
+        $user = $student->user;
+
+        // إرجاع البيانات المسموح بها فقط (بدون التقارير أو بيانات حساسة أخرى)
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'student' => [
+                    'id' => $student->id,
+                    'student_id' => $student->student_id,
+                    'major' => $student->major,
+                    'university' => $student->university,
+                    'year_of_study' => $student->year_of_study,
+                ],
+                'user' => [
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                ],
+                'application' => [
+                    'id' => $application->id,
+                    'opportunity_title' => $application->opportunity->title,
+                    'cover_letter' => $application->cover_letter,
+                    'cv_url' => $application->cv_path ? asset('storage/' . $application->cv_path) : null,
+                    'status' => $application->status,
+                    'applied_at' => $application->applied_at,
+                ],
+            ],
+        ]);
     }
 }

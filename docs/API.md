@@ -2,11 +2,13 @@
 
 <div align="center">
 
-**Complete API Reference for Trinova Platform**
+**Complete API Reference for Trinova Platform with AI-Powered Features**
 
 ![API](https://img.shields.io/badge/API-RESTful-4CAF50?style=flat-square)
 ![Auth](https://img.shields.io/badge/Auth-Sanctum-FF2D20?style=flat-square)
 ![Version](https://img.shields.io/badge/Version-1.0-007ACC?style=flat-square)
+![AI](https://img.shields.io/badge/AI-Groq%20LLM-FF6B35?style=flat-square)
+![Security](https://img.shields.io/badge/Security-RBAC%20%2B%20Admin%20Review-00C853?style=flat-square)
 
 </div>
 
@@ -27,6 +29,8 @@
 - [Certificates](#-certificates)
 - [Notifications](#-notifications)
 - [Messages](#-messages)
+- [AI Features](#-ai-features)
+- [Admin Management](#-admin-management)
 - [Error Responses](#-error-responses)
 - [Rate Limiting](#-rate-limiting)
 
@@ -99,7 +103,7 @@ Content-Type: application/json
 
 **Auth Required:** ❌ No
 
-**Request Body:**
+**Request Body (Student):**
 
 ```json
 {
@@ -116,19 +120,52 @@ Content-Type: application/json
 }
 ```
 
-**Roles and Required Fields:**
-
-| Role | Required Fields |
-|------|-----------------|
-| `student` | `student_id`, `major`, `university`, `year_of_study` |
-| `provider` | `organization_name`, `organization_type`, `address`, `city` |
-| `supervisor` | `employee_id`, `department`, `academic_title` |
-
-**Success Response (201):**
+**Request Body (Provider):**
 
 ```json
 {
-    "message": "Registration successful. Please verify your email.",
+    "name": "Company HR",
+    "email": "hr@company.com",
+    "password": "password123",
+    "password_confirmation": "password123",
+    "phone": "+970591234567",
+    "role": "provider",
+    "organization_name": "Tech Corp",
+    "organization_type": "company",
+    "address": "Gaza City",
+    "city": "Gaza"
+}
+```
+
+**Request Body (Supervisor - University Email Required):**
+
+```json
+{
+    "name": "Dr. Ahmed",
+    "email": "ahmed@iugaza.edu.ps",
+    "password": "password123",
+    "password_confirmation": "password123",
+    "phone": "+970591234567",
+    "role": "supervisor",
+    "employee_id": "EMP001",
+    "department": "Computer Science",
+    "academic_title": "professor"
+}
+```
+
+**Roles and Required Fields:**
+
+| Role | Required Fields | Special Requirements |
+|------|-----------------|---------------------|
+| `student` | `student_id`, `major`, `university`, `year_of_study` | Any email allowed |
+| `provider` | `organization_name`, `organization_type`, `address`, `city` | **Requires admin approval** |
+| `supervisor` | `employee_id`, `department`, `academic_title` | **University email required** |
+
+**Success Response (201) - Student:**
+
+```json
+{
+    "message": "تم التسجيل بنجاح. يرجى التحقق من بريدك الإلكتروني.",
     "token": "1|abc123...",
     "user": {
         "id": 1,
@@ -136,7 +173,36 @@ Content-Type: application/json
         "email": "john@example.com",
         "role": "student"
     },
+    "account_status": "active",
     "email_verification_required": true
+}
+```
+
+**Success Response (201) - Provider:**
+
+```json
+{
+    "message": "تم التسجيل بنجاح. يرجى التحقق من بريدك الإلكتروني أولاً، ثم سيتم مراجعة حسابك من قبل الإدارة. سيتم إعلامك بالبريد عند الموافقة.",
+    "token": "2|xyz789...",
+    "user": {
+        "id": 2,
+        "name": "Company HR",
+        "email": "hr@company.com",
+        "role": "provider"
+    },
+    "account_status": "pending_review",
+    "email_verification_required": true
+}
+```
+
+**Error Response (422) - Supervisor with non-university email:**
+
+```json
+{
+    "message": "The email field must be a valid university email domain.",
+    "errors": {
+        "email": ["يجب استخدام بريد إلكتروني جامعي رسمي. النطاقات المسموحة: iugaza.edu.ps, alazhar.edu.ps, up.edu.ps"]
+    }
 }
 ```
 
@@ -161,7 +227,7 @@ Content-Type: application/json
 
 ```json
 {
-    "message": "Login successful",
+    "message": "تم تسجيل الدخول بنجاح",
     "token": "1|abc123...",
     "user": {
         "id": 1,
@@ -177,8 +243,27 @@ Content-Type: application/json
 
 ```json
 {
-    "message": "Please verify your email first",
+    "message": "يرجى التحقق من بريدك الإلكتروني أولاً",
     "email_verification_required": true
+}
+```
+
+**Error Response (403) - Provider account pending review:**
+
+```json
+{
+    "message": "حسابك قيد المراجعة من قبل الإدارة. سيتم إعلامك عند الموافقة.",
+    "account_status": "pending_review"
+}
+```
+
+**Error Response (403) - Provider account rejected:**
+
+```json
+{
+    "message": "تم رفض حسابك. بيانات المؤسسة غير مكتملة.",
+    "account_status": "rejected",
+    "rejection_reason": "بيانات المؤسسة غير مكتملة."
 }
 ```
 
@@ -194,7 +279,7 @@ Content-Type: application/json
 
 ```json
 {
-    "message": "Logout successful"
+    "message": "تم تسجيل الخروج بنجاح"
 }
 ```
 
@@ -215,6 +300,7 @@ Content-Type: application/json
         "name": "John Doe",
         "email": "john@example.com",
         "role": "student",
+        "account_status": "active",
         "student": {
             "student_id": "20240001",
             "major": "IT",
@@ -239,7 +325,7 @@ Content-Type: application/json
 
 ```json
 {
-    "message": "Email verified successfully!",
+    "message": "تم التحقق من بريدك الإلكتروني بنجاح!",
     "verified": true
 }
 ```
@@ -256,7 +342,7 @@ Content-Type: application/json
 
 ```json
 {
-    "message": "Verification link sent again"
+    "message": "تم إعادة إرسال رابط التحقق"
 }
 ```
 
@@ -272,7 +358,7 @@ Content-Type: application/json
 
 ```json
 {
-    "message": "Please verify your email. A verification link has been sent to you."
+    "message": "يرجى التحقق من بريدك الإلكتروني. تم إرسال رابط التحقق إليك."
 }
 ```
 
@@ -298,7 +384,7 @@ Content-Type: application/json
 
 ```json
 {
-    "message": "Password reset link sent to your email"
+    "message": "تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني"
 }
 ```
 
@@ -350,7 +436,7 @@ Content-Type: application/json
 
 ```json
 {
-    "message": "Password reset successfully"
+    "message": "تم إعادة تعيين كلمة المرور بنجاح"
 }
 ```
 
@@ -372,13 +458,20 @@ Content-Type: application/json
 | `major` | string | Filter by major |
 | `location` | string | Filter by location |
 | `is_remote` | boolean | Filter remote opportunities |
+| `is_paid` | boolean | Filter paid opportunities |
+| `min_salary` | number | Minimum salary |
+| `max_salary` | number | Maximum salary |
+| `sort_by` | string | Sort field (default: created_at) |
+| `sort_order` | string | Sort order (asc/desc) |
 | `page` | integer | Page number |
+| `per_page` | integer | Items per page (default: 15) |
 
 **Success Response (200):**
 
 ```json
 {
-    "opportunities": {
+    "success": true,
+    "data": {
         "current_page": 1,
         "data": [
             {
@@ -394,6 +487,11 @@ Content-Type: application/json
             }
         ],
         "total": 25
+    },
+    "filters_applied": {
+        "search": null,
+        "major": "IT",
+        "location": "Gaza"
     }
 }
 ```
@@ -417,18 +515,19 @@ Content-Type: application/json
         "requirements": "...",
         "provider": { ... },
         "available_positions": 2,
-        "duration_months": 3
+        "duration_months": 3,
+        "status": "open"
     }
 }
 ```
 
 ---
 
-### Create Opportunity (Provider)
+### Create Opportunity (Provider - Active Account Required)
 
 **Endpoint:** `POST /api/provider/opportunities`
 
-**Auth Required:** ✅ Yes (Provider only)
+**Auth Required:** ✅ Yes (Provider with `active` account status only)
 
 **Request Body:**
 
@@ -438,6 +537,7 @@ Content-Type: application/json
     "description": "We need a Laravel developer",
     "requirements": "Laravel, PHP, MySQL",
     "required_major": "IT",
+    "required_skills": ["Laravel", "PHP", "MySQL"],
     "available_positions": 2,
     "location": "Gaza",
     "duration_months": 3,
@@ -454,9 +554,118 @@ Content-Type: application/json
 
 ```json
 {
-    "success": true,
-    "message": "Opportunity created successfully",
+    "message": "تم إنشاء الفرصة بنجاح",
     "opportunity": { ... }
+}
+```
+
+**Error Response (403) - Provider account not active:**
+
+```json
+{
+    "message": "حسابك قيد المراجعة أو مرفوض. لا يمكنك نشر فرص تدريبية حتى تتم الموافقة على حسابك.",
+    "account_status": "pending_review"
+}
+```
+
+---
+
+### Update Opportunity (Provider)
+
+**Endpoint:** `PUT /api/provider/opportunities/{id}`
+
+**Auth Required:** ✅ Yes (Provider only - owner)
+
+**Request Body:**
+
+```json
+{
+    "title": "Senior Laravel Developer",
+    "available_positions": 5,
+    "application_deadline": "2026-08-15"
+}
+```
+
+**Success Response (200):**
+
+```json
+{
+    "message": "تم تحديث الفرصة بنجاح",
+    "opportunity": { ... }
+}
+```
+
+---
+
+### Close Opportunity (Provider)
+
+**Endpoint:** `POST /api/provider/opportunities/{id}/close`
+
+**Auth Required:** ✅ Yes (Provider only - owner)
+
+**Success Response (200):**
+
+```json
+{
+    "message": "تم إغلاق الفرصة بنجاح",
+    "opportunity": { ... }
+}
+```
+
+---
+
+### Reopen Opportunity (Provider)
+
+**Endpoint:** `POST /api/provider/opportunities/{id}/reopen`
+
+**Auth Required:** ✅ Yes (Provider only - owner)
+
+**Success Response (200):**
+
+```json
+{
+    "message": "تم إعادة فتح الفرصة بنجاح",
+    "opportunity": { ... }
+}
+```
+
+**Error Response (400) - Opportunity not closed:**
+
+```json
+{
+    "message": "يمكن إعادة فتح الفرصة المغلقة فقط"
+}
+```
+
+**Error Response (400) - Deadline passed:**
+
+```json
+{
+    "message": "لا يمكن إعادة فتح الفرصة - الموعد النهائي قد انتهى"
+}
+```
+
+---
+
+### List Provider's Opportunities
+
+**Endpoint:** `GET /api/provider/opportunities`
+
+**Auth Required:** ✅ Yes (Provider only)
+
+**Success Response (200):**
+
+```json
+{
+    "opportunities": [
+        {
+            "id": 1,
+            "title": "Laravel Developer",
+            "status": "open",
+            "applications_count": 5,
+            "available_positions": 2
+        }
+    ]
 }
 ```
 
@@ -485,21 +694,18 @@ Content-Type: multipart/form-data
 
 ```json
 {
-    "success": true,
-    "message": "Application submitted successfully",
+    "message": "تم التقديم بنجاح",
     "application": { ... }
 }
 ```
 
 ---
 
-## 📝 Applications
+### Track My Applications (Student)
 
-### List Provider's Applications
+**Endpoint:** `GET /api/student/applications`
 
-**Endpoint:** `GET /api/provider/applications`
-
-**Auth Required:** ✅ Yes (Provider only)
+**Auth Required:** ✅ Yes (Student only)
 
 **Success Response (200):**
 
@@ -508,13 +714,112 @@ Content-Type: multipart/form-data
     "applications": [
         {
             "id": 1,
-            "student": { ... },
-            "opportunity": { ... },
+            "opportunity": {
+                "title": "Laravel Developer",
+                "provider": {
+                    "user": {
+                        "name": "Tech Corp"
+                    }
+                }
+            },
             "status": "pending",
-            "cover_letter": "...",
-            "cv_path": "..."
+            "applied_at": "2026-07-03T10:00:00Z"
         }
     ]
+}
+```
+
+---
+
+### Withdraw Application (Student)
+
+**Endpoint:** `POST /api/student/applications/{id}/withdraw`
+
+**Auth Required:** ✅ Yes (Student only - owner)
+
+**Success Response (200):**
+
+```json
+{
+    "message": "تم الانسحاب بنجاح"
+}
+```
+
+---
+
+## 📝 Applications
+
+### List Applicants for Opportunity (Provider)
+
+**Endpoint:** `GET /api/provider/opportunities/{id}/applications`
+
+**Auth Required:** ✅ Yes (Provider only - owner)
+
+**Success Response (200):**
+
+```json
+{
+    "applications": [
+        {
+            "id": 1,
+            "student": {
+                "user": {
+                    "name": "John Doe",
+                    "email": "john@example.com"
+                }
+            },
+            "status": "pending",
+            "cover_letter": "...",
+            "cv_path": "...",
+            "applied_at": "2026-07-03T10:00:00Z"
+        }
+    ]
+}
+```
+
+---
+
+### View Applicant Profile (Provider)
+
+**Endpoint:** `GET /api/provider/applicants/{studentId}/profile`
+
+**Auth Required:** ✅ Yes (Provider only - must have received application from this student)
+
+**Success Response (200):**
+
+```json
+{
+    "success": true,
+    "data": {
+        "student": {
+            "id": 1,
+            "student_id": "20240001",
+            "major": "IT",
+            "university": "Islamic University",
+            "year_of_study": "3"
+        },
+        "user": {
+            "name": "John Doe",
+            "email": "john@example.com",
+            "phone": "+970591234567"
+        },
+        "application": {
+            "id": 1,
+            "opportunity_title": "Laravel Developer",
+            "cover_letter": "I am interested in this position...",
+            "cv_url": "http://127.0.0.1:8000/storage/cvs/cv.pdf",
+            "status": "pending",
+            "applied_at": "2026-07-03T10:00:00Z"
+        }
+    }
+}
+```
+
+**Error Response (404) - Student didn't apply to this provider:**
+
+```json
+{
+    "message": "لا توجد بيانات تقديم لهذا الطالب لدى مؤسستك"
 }
 ```
 
@@ -531,7 +836,8 @@ Content-Type: multipart/form-data
 ```json
 {
     "status": "accepted",
-    "provider_notes": "Welcome to our team!"
+    "provider_notes": "Welcome to our team!",
+    "rejection_reason": null
 }
 ```
 
@@ -541,8 +847,7 @@ Content-Type: multipart/form-data
 
 ```json
 {
-    "success": true,
-    "message": "Application reviewed successfully",
+    "message": "تم تحديث حالة التقديم",
     "application": { ... }
 }
 ```
@@ -557,26 +862,31 @@ Content-Type: multipart/form-data
 
 **Auth Required:** ✅ Yes (Student only)
 
-**Request Body:**
+**Headers:**
 
-```json
-{
-    "opportunity_id": 1,
-    "report_date": "2026-07-03",
-    "week_number": 1,
-    "training_hours": 30,
-    "completed_tasks": "Developed authentication module",
-    "challenges": "API integration",
-    "next_week_plan": "Payment system"
-}
 ```
+Content-Type: multipart/form-data
+```
+
+**Form Data:**
+
+| Field | Type | Required |
+|-------|------|----------|
+| `opportunity_id` | integer | ✅ Yes |
+| `report_date` | date | ✅ Yes |
+| `week_number` | integer | ✅ Yes |
+| `training_hours` | integer | ✅ Yes |
+| `completed_tasks` | string | ✅ Yes |
+| `challenges` | string | ❌ No |
+| `next_week_plan` | string | ❌ No |
+| `attachments[]` | file[] | ❌ No |
 
 **Success Response (201):**
 
 ```json
 {
     "success": true,
-    "message": "Report submitted successfully",
+    "message": "تم إرسال التقرير بنجاح",
     "report": {
         "id": 1,
         "week_number": 1,
@@ -599,8 +909,8 @@ Content-Type: multipart/form-data
 ```json
 {
     "success": true,
-    "count": 5,
-    "reports": [ ... ]
+    "reports": [ ... ],
+    "count": 5
 }
 ```
 
@@ -617,8 +927,8 @@ Content-Type: multipart/form-data
 ```json
 {
     "success": true,
-    "count": 10,
-    "reports": [ ... ]
+    "reports": [ ... ],
+    "count": 10
 }
 ```
 
@@ -646,9 +956,48 @@ Content-Type: multipart/form-data
 
 ```json
 {
-    "success": true,
-    "message": "Report reviewed successfully",
+    "message": "تم مراجعة التقرير",
     "report": { ... }
+}
+```
+
+---
+
+### Identify Late Students (Supervisor)
+
+**Endpoint:** `GET /api/supervisor/students/late`
+
+**Auth Required:** ✅ Yes (Supervisor only)
+
+**Success Response (200):**
+
+```json
+{
+    "success": true,
+    "late_students": [
+        {
+            "student_id": 1,
+            "student_number": "20240001",
+            "name": "John Doe",
+            "email": "john@example.com",
+            "major": "IT",
+            "last_report_date": "2026-06-14",
+            "days_since_last_report": 20,
+            "status": "late"
+        },
+        {
+            "student_id": 3,
+            "student_number": "20240003",
+            "name": "Jane Smith",
+            "email": "jane@example.com",
+            "major": "IT",
+            "last_report_date": null,
+            "days_since_last_report": null,
+            "status": "never_submitted"
+        }
+    ],
+    "count": 2,
+    "deadline": "2026-06-20"
 }
 ```
 
@@ -734,6 +1083,22 @@ Content-Type: multipart/form-data
 ```json
 {
     "evaluations": [ ... ]
+}
+```
+
+---
+
+### Get Student Final Evaluation for Opportunity
+
+**Endpoint:** `GET /api/student/evaluations/opportunity/{opportunityId}/final`
+
+**Auth Required:** ✅ Yes (Student only)
+
+**Success Response (200):**
+
+```json
+{
+    "final_evaluation": { ... }
 }
 ```
 
@@ -855,6 +1220,16 @@ Content-Disposition: attachment; filename="certificate_1.pdf"
     "data": [ ... ]
 }
 ```
+
+---
+
+### Download Student Certificate (Admin)
+
+**Endpoint:** `GET /api/admin/students/{studentId}/certificate`
+
+**Auth Required:** ✅ Yes (Admin only)
+
+**Response:** Binary PDF file
 
 ---
 
@@ -1022,6 +1397,423 @@ Content-Disposition: attachment; filename="certificate_1.pdf"
 
 ---
 
+## 🤖 AI Features
+
+Trinova integrates advanced AI capabilities using **Groq LLM** to help students write better internship reports. All AI endpoints are available for students only.
+
+### Language Support
+
+- ✅ **Automatic language detection** (Arabic/English)
+- ✅ AI responds in the **same language** as the input
+- ✅ Supports mixed-language content
+
+---
+
+### Improve Report (AI)
+
+**Endpoint:** `POST /api/student/ai/reports/improve`
+
+**Auth Required:** ✅ Yes (Student only)
+
+**Description:** Enhances a student's report with professional language and better structure.
+
+**Request Body:**
+
+```json
+{
+    "content": "تعلمت Laravel اليوم وعملت على database"
+}
+```
+
+**Success Response (200):**
+
+```json
+{
+    "success": true,
+    "message": "تم تحسين التقرير بنجاح باستخدام الذكاء الاصطناعي.",
+    "data": {
+        "original_content": "تعلمت Laravel اليوم وعملت على database",
+        "improved_content": "خلال هذا اليوم، ركزت على تطوير مهاراتي في إطار عمل Laravel، حيث قمت بتصميم وإدارة قاعدة البيانات بكفاءة. تعلمت كيفية استخدام Eloquent ORM لإدارة العلاقات بين الجداول بشكل فعّال...",
+        "detected_language": "arabic",
+        "original_word_count": 8,
+        "improved_word_count": 45,
+        "ai_model": "llama-3.3-70b-versatile"
+    }
+}
+```
+
+**Validation:**
+- `content`: required, string, min:10, max:2000
+
+---
+
+### Analyze Report (AI)
+
+**Endpoint:** `POST /api/student/ai/reports/analyze`
+
+**Auth Required:** ✅ Yes (Student only)
+
+**Description:** Analyzes a report and provides quality score, strengths, weaknesses, and suggestions.
+
+**Request Body:**
+
+```json
+{
+    "content": "تعلمت Laravel اليوم وعملت على database"
+}
+```
+
+**Success Response (200):**
+
+```json
+{
+    "success": true,
+    "message": "تم تحليل التقرير بنجاح باستخدام الذكاء الاصطناعي.",
+    "data": {
+        "quality_score": 65,
+        "grade": "average",
+        "strengths": [
+            "ذكر المهام المنجزة بوضوح",
+            "الإشارة إلى حل المشكلات",
+            "محتوى عملي"
+        ],
+        "weaknesses": [
+            "اللغة غير رسمية",
+            "عدم وجود تفاصيل تقنية كافية",
+            "غياب التنظيم في فقرات"
+        ],
+        "improvements": [
+            "استخدم مصطلحات تقنية مثل 'تطوير واجهات برمجة التطبيقات'",
+            "نظم المحتوى في فقرات واضحة",
+            "أضف تفاصيل عن التقنيات المستخدمة"
+        ],
+        "detailed_feedback": "التقرير يذكر المهام المنجزة بشكل جيد، لكنه يحتاج إلى لغة أكثر احترافية وتنظيم أفضل للمحتوى.",
+        "criteria_scores": {
+            "content_quality": 70,
+            "structure": 50,
+            "language": 60,
+            "professionalism": 65
+        },
+        "statistics": {
+            "word_count": 14,
+            "sentence_count": 1,
+            "paragraph_count": 1,
+            "character_count": 78,
+            "character_count_no_spaces": 65,
+            "average_sentence_length": 14,
+            "estimated_reading_time_minutes": 1
+        },
+        "detected_language": "arabic",
+        "ai_model": "llama-3.3-70b-versatile"
+    }
+}
+```
+
+**Validation:**
+- `content`: required, string, min:10, max:5000
+
+---
+
+### Generate Report from Points (AI)
+
+**Endpoint:** `POST /api/student/ai/reports/generate`
+
+**Auth Required:** ✅ Yes (Student only)
+
+**Description:** Generates a complete professional report from simple bullet points.
+
+**Request Body:**
+
+```json
+{
+    "points": [
+        "تعلمت Laravel",
+        "عملت على database وقمت بتصميم الجداول",
+        "طورت API للطلاب باستخدام Laravel Sanctum",
+        "واجهت مشكلة في الربط بين الجداول وحللتها",
+        "تعلمت كيفية استخدام Eloquent ORM"
+    ],
+    "context": "الأسبوع الأول من التدريب في شركة تقنية"
+}
+```
+
+**Success Response (200):**
+
+```json
+{
+    "success": true,
+    "message": "تم توليد التقرير بنجاح باستخدام الذكاء الاصطناعي.",
+    "data": {
+        "input_points": [
+            "تعلمت Laravel",
+            "عملت على database وقمت بتصميم الجداول",
+            "طورت API للطلاب باستخدام Laravel Sanctum"
+        ],
+        "context": "الأسبوع الأول من التدريب في شركة تقنية",
+        "generated_report": "خلال هذا الأسبوع، ركزت على تطوير مهاراتي في إطار عمل Laravel...",
+        "detected_language": "arabic",
+        "points_count": 5,
+        "report_statistics": {
+            "word_count": 85,
+            "sentence_count": 5,
+            "paragraph_count": 1,
+            "character_count": 520,
+            "character_count_no_spaces": 436,
+            "average_sentence_length": 17,
+            "estimated_reading_time_minutes": 1
+        },
+        "ai_model": "llama-3.3-70b-versatile"
+    }
+}
+```
+
+**Validation:**
+- `points`: required, array, min:2, max:20
+- `points.*`: required, string, min:3, max:200
+- `context`: optional, string, max:500
+
+---
+
+### Get Smart Suggestions (AI)
+
+**Endpoint:** `POST /api/student/ai/reports/suggest`
+
+**Auth Required:** ✅ Yes (Student only)
+
+**Description:** Provides intelligent suggestions for what to write in a report based on the student's major and current week.
+
+**Request Body:**
+
+```json
+{
+    "major": "تقنية المعلومات",
+    "current_tasks": "تعلمت Laravel هذا الأسبوع",
+    "week_number": 3,
+    "language": "arabic"
+}
+```
+
+**Success Response (200):**
+
+```json
+{
+    "success": true,
+    "message": "تم توليد الاقتراحات بنجاح باستخدام الذكاء الاصطناعي.",
+    "data": {
+        "suggested_topics": [
+            "تطوير واجهات برمجة التطبيقات باستخدام Laravel",
+            "إدارة قواعد البيانات والعلاقات",
+            "المصادقة والتفويض باستخدام Sanctum",
+            "اختبار الوحدات باستخدام PHPUnit",
+            "نشر التطبيق على بيئة الإنتاج"
+        ],
+        "suggested_tasks": [
+            "إنشاء نموذج Student مع العلاقات",
+            "تطوير API للعمليات CRUD",
+            "تطبيق نظام المصادقة",
+            "كتابة اختبارات وحدة للـ Controllers",
+            "مراجعة كود الزملاء"
+        ],
+        "suggested_challenges": [
+            "فهم العلاقات المعقدة في Eloquent",
+            "التعامل مع الأخطاء في الـ APIs",
+            "كتابة اختبارات شاملة"
+        ],
+        "suggested_skills_learned": [
+            "تطوير RESTful APIs",
+            "إدارة قواعد البيانات العلائقية",
+            "المصادقة الآمنة",
+            "كتابة كود نظيف وقابل للصيانة"
+        ],
+        "writing_tips": [
+            "استخدم مصطلحات تقنية محددة",
+            "اذكر التحديات والحلول بوضوح",
+            "وثّق إنجازاتك بأرقام وإحصائيات"
+        ],
+        "example_bullet_points": [
+            "طورت نظام مصادقة كامل باستخدام Laravel Sanctum",
+            "أنشأت 5 APIs للعمليات CRUD على الطلاب",
+            "حللت مشكلة في العلاقات بين الجداول"
+        ],
+        "major": "تقنية المعلومات",
+        "week_number": 3,
+        "detected_language": "arabic",
+        "ai_model": "llama-3.3-70b-versatile"
+    }
+}
+```
+
+**Validation:**
+- `major`: required, string, max:100
+- `current_tasks`: optional, string, max:1000
+- `week_number`: optional, integer, min:1, max:52
+- `language`: optional, in:arabic,english (auto-detected if not provided)
+
+---
+
+## 🛡️ Admin Management
+
+### List All Providers
+
+**Endpoint:** `GET /api/admin/providers`
+
+**Auth Required:** ✅ Yes (Admin only)
+
+**Success Response (200):**
+
+```json
+{
+    "success": true,
+    "data": [ ... ]
+}
+```
+
+---
+
+### List Pending Providers
+
+**Endpoint:** `GET /api/admin/providers/pending`
+
+**Auth Required:** ✅ Yes (Admin only)
+
+**Success Response (200):**
+
+```json
+{
+    "success": true,
+    "data": [
+        {
+            "id": 1,
+            "name": "Company HR",
+            "email": "hr@company.com",
+            "phone": "+970591234567",
+            "organization_name": "Tech Corp",
+            "organization_type": "company",
+            "address": "Gaza",
+            "city": "Gaza",
+            "registered_at": "2026-07-01T10:00:00Z"
+        }
+    ],
+    "meta": {
+        "total": 5,
+        "current_page": 1,
+        "last_page": 1
+    }
+}
+```
+
+---
+
+### Approve Provider
+
+**Endpoint:** `POST /api/admin/providers/{providerId}/approve`
+
+**Auth Required:** ✅ Yes (Admin only)
+
+**Success Response (200):**
+
+```json
+{
+    "success": true,
+    "message": "تمت الموافقة على حساب المزود بنجاح"
+}
+```
+
+---
+
+### Reject Provider
+
+**Endpoint:** `POST /api/admin/providers/{providerId}/reject`
+
+**Auth Required:** ✅ Yes (Admin only)
+
+**Request Body:**
+
+```json
+{
+    "reason": "بيانات المؤسسة غير مكتملة. يرجى إعادة التسجيل بمعلومات صحيحة."
+}
+```
+
+**Success Response (200):**
+
+```json
+{
+    "success": true,
+    "message": "تم رفض حساب المزود"
+}
+```
+
+**Validation:**
+- `reason`: required, string, max:500
+
+---
+
+### List All Students
+
+**Endpoint:** `GET /api/admin/students`
+
+**Auth Required:** ✅ Yes (Admin only)
+
+---
+
+### List All Supervisors
+
+**Endpoint:** `GET /api/admin/supervisors`
+
+**Auth Required:** ✅ Yes (Admin only)
+
+---
+
+### Assign Supervisor to Student
+
+**Endpoint:** `POST /api/admin/assign-supervisor`
+
+**Auth Required:** ✅ Yes (Admin only)
+
+**Request Body:**
+
+```json
+{
+    "supervisor_id": 1,
+    "student_id": 1
+}
+```
+
+---
+
+### Approve Internship Record
+
+**Endpoint:** `POST /api/admin/records/{id}/approve`
+
+**Auth Required:** ✅ Yes (Admin only)
+
+---
+
+### Get System Statistics
+
+**Endpoint:** `GET /api/admin/statistics`
+
+**Auth Required:** ✅ Yes (Admin only)
+
+---
+
+### List All Final Evaluations
+
+**Endpoint:** `GET /api/admin/evaluations/final`
+
+**Auth Required:** ✅ Yes (Admin only)
+
+---
+
+### Get Evaluations Statistics
+
+**Endpoint:** `GET /api/admin/evaluations/statistics`
+
+**Auth Required:** ✅ Yes (Admin only)
+
+---
+
 ## 🚨 Error Responses
 
 ### 401 Unauthorized
@@ -1037,6 +1829,25 @@ Content-Disposition: attachment; filename="certificate_1.pdf"
 ```json
 {
     "message": "This action is unauthorized"
+}
+```
+
+### 403 Forbidden - Account Pending Review
+
+```json
+{
+    "message": "حسابك قيد المراجعة من قبل الإدارة. سيتم إعلامك عند الموافقة.",
+    "account_status": "pending_review"
+}
+```
+
+### 403 Forbidden - Account Rejected
+
+```json
+{
+    "message": "تم رفض حسابك. بيانات المؤسسة غير مكتملة.",
+    "account_status": "rejected",
+    "rejection_reason": "بيانات المؤسسة غير مكتملة."
 }
 ```
 
@@ -1060,6 +1871,17 @@ Content-Disposition: attachment; filename="certificate_1.pdf"
 }
 ```
 
+### 422 Validation Error - Non-University Email
+
+```json
+{
+    "message": "The email field must be a valid university email domain.",
+    "errors": {
+        "email": ["يجب استخدام بريد إلكتروني جامعي رسمي. النطاقات المسموحة: iugaza.edu.ps, alazhar.edu.ps, up.edu.ps"]
+    }
+}
+```
+
 ### 500 Server Error
 
 ```json
@@ -1079,6 +1901,7 @@ Content-Disposition: attachment; filename="certificate_1.pdf"
 | Register | 3 per minute |
 | Password Reset | 5 per minute |
 | Email Resend | 6 per minute |
+| AI Features | 10 per minute |
 | General API | 60 per minute |
 
 ---
@@ -1091,6 +1914,26 @@ Content-Disposition: attachment; filename="certificate_1.pdf"
 4. **Use strong passwords** (min 8 characters)
 5. **Implement CSRF protection** for web requests
 6. **Regular security audits**
+7. **Admin review** for new provider accounts
+8. **University email validation** for supervisors
+9. **Rate limiting** on all sensitive endpoints
+10. **XSS and SQL injection protection** via Laravel's built-in features
+
+---
+
+## 🎓 University Email Domains
+
+Supervisors must register with approved university email domains:
+
+| University | Email Domain |
+|------------|--------------|
+| Islamic University of Gaza | `@iugaza.edu.ps` |
+| Al-Azhar University | `@alazhar.edu.ps` |
+| University of Palestine | `@up.edu.ps` |
+| Al-Aqsa University | `@alaqsa.edu.ps` |
+| University of Science & Technology | `@uast.edu.ps` |
+
+To add more domains, edit `config/universities.php`.
 
 ---
 
@@ -1099,5 +1942,7 @@ Content-Disposition: attachment; filename="certificate_1.pdf"
 **📖 Back to [README.md](../README.md)**
 
 **Made with ❤️ by Trinova Team**
+
+**Powered by Groq AI 🤖**
 
 </div>

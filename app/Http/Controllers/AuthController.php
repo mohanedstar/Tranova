@@ -8,7 +8,9 @@ use App\Models\User;
 use App\Models\Student;
 use App\Models\Provider;
 use App\Models\Supervisor;
+use App\Models\Application;
 use App\Notifications\NewStudentRegistered;
+use App\Rules\UniversityEmail; // ✅ جديد: للتحقق من البريد الجامعي
 
 class AuthController extends Controller
 {
@@ -16,11 +18,23 @@ class AuthController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
+            'email' => ['required', 'email', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'phone' => 'nullable|string|max:20',
             'role' => 'required|in:student,provider,supervisor',
         ]);
+
+        // ✅ التحقق من البريد الجامعي للمشرف فقط
+        if ($request->role === 'supervisor') {
+            $request->validate([
+                'email' => ['required', 'email', 'unique:users,email', new UniversityEmail],
+            ]);
+        }
+
+        // ✅ تحديد حالة الحساب بناءً على الدور
+        $accountStatus = User::requiresAdminReview($request->role)
+            ? 'pending_review'
+            : 'active';
 
         $user = User::create([
             'name' => $request->name,
@@ -28,6 +42,7 @@ class AuthController extends Controller
             'password' => $request->password,
             'phone' => $request->phone,
             'role' => $request->role,
+            'account_status' => $accountStatus,
         ]);
 
         // إنشاء السجل الفرعي حسب الدور
@@ -97,10 +112,17 @@ class AuthController extends Controller
             $userData = $user->load($user->role);
         }
 
+     // ✅ تحديد رسالة التسجيل المناسبة بناءً على حالة الحساب
+if ($accountStatus === 'pending_review') {
+    $message = 'تم التسجيل بنجاح. يرجى التحقق من بريدك الإلكتروني أولاً، ثم سيتم مراجعة حسابك من قبل الإدارة. سيتم إعلامك بالبريد عند الموافقة.';
+} else {
+    $message = 'تم التسجيل بنجاح. يرجى التحقق من بريدك الإلكتروني.';
+}
         return response()->json([
-            'message' => 'تم التسجيل بنجاح. يرجى التحقق من بريدك الإلكتروني.',
+            'message' => $message,
             'token' => $token,
             'user' => $userData,
+            'account_status' => $accountStatus,
             'email_verification_required' => true,
         ], 201);
     }
@@ -123,6 +145,29 @@ class AuthController extends Controller
             return response()->json([
                 'message' => 'يرجى التحقق من بريدك الإلكتروني أولاً',
                 'email_verification_required' => true,
+            ], 403);
+        }
+
+        // ✅ التحقق من حالة الحساب
+        if ($user->account_status === 'pending_review') {
+            return response()->json([
+                'message' => 'حسابك قيد المراجعة من قبل الإدارة. سيتم إعلامك عند الموافقة.',
+                'account_status' => 'pending_review',
+            ], 403);
+        }
+
+        if ($user->account_status === 'rejected') {
+            return response()->json([
+                'message' => 'تم رفض حسابك. ' . ($user->rejection_reason ?? ''),
+                'account_status' => 'rejected',
+                'rejection_reason' => $user->rejection_reason,
+            ], 403);
+        }
+
+        if ($user->account_status === 'suspended') {
+            return response()->json([
+                'message' => 'حسابك معلق. يرجى التواصل مع الإدارة.',
+                'account_status' => 'suspended',
             ], 403);
         }
 
@@ -161,6 +206,63 @@ class AuthController extends Controller
         return response()->json([
             'user' => $userData,
             'email_verified' => $user->hasVerifiedEmail(),
+        ]);
+    }
+
+    // عرض ملف الطالب الشخصي (للمزود فقط)
+    public function applicantProfile(Request $request, $studentId)
+    {
+        $provider = $request->user()->provider;
+
+        // ✅ التحقق من وجود provider record
+        if (!$provider) {
+            return response()->json([
+                'message' => 'بيانات المزود غير مكتملة'
+            ], 400);
+        }
+
+        // التحقق من وجود التقديم من هذا الطالب لدى مزود التدريب
+        $application = Application::where('student_id', $studentId)
+            ->whereHas('opportunity', function ($query) use ($provider) {
+                $query->where('provider_id', $provider->id);
+            })
+            ->with(['student.user', 'opportunity'])
+            ->first();
+
+        if (!$application) {
+            return response()->json([
+                'message' => 'لا توجد بيانات تقديم لهذا الطالب لدى مؤسستك'
+            ], 404);
+        }
+
+        $student = $application->student;
+        $user = $student->user;
+
+        // إرجاع البيانات المسموح بها فقط
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'student' => [
+                    'id' => $student->id,
+                    'student_id' => $student->student_id,
+                    'major' => $student->major,
+                    'university' => $student->university,
+                    'year_of_study' => $student->year_of_study,
+                ],
+                'user' => [
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                ],
+                'application' => [
+                    'id' => $application->id,
+                    'opportunity_title' => $application->opportunity->title,
+                    'cover_letter' => $application->cover_letter,
+                    'cv_url' => $application->cv_path ? asset('storage/' . $application->cv_path) : null,
+                    'status' => $application->status,
+                    'applied_at' => $application->applied_at,
+                ],
+            ],
         ]);
     }
 }

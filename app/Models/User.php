@@ -18,7 +18,11 @@ class User extends Authenticatable implements MustVerifyEmail
         'password',
         'phone',
         'role',
-        'email_verified_at',  // ✅ أضفنا هذا
+        'email_verified_at',
+        'account_status',
+        'rejection_reason',
+        'reviewed_at',
+        'reviewed_by',
     ];
 
     protected $hidden = [
@@ -30,6 +34,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return [
             'email_verified_at' => 'datetime',
+             'reviewed_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
@@ -120,4 +125,64 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $this->notify(new \App\Notifications\VerifyEmailNotification());
     }
+
+    // ==================== Account Status Helpers ====================
+
+/**
+ * التحقق من أن الحساب نشط
+ */
+public function isActive(): bool
+{
+    return $this->account_status === 'active';
+}
+
+/**
+ * التحقق من أن الحساب قيد المراجعة
+ */
+public function isPendingReview(): bool
+{
+    return $this->account_status === 'pending_review';
+}
+
+/**
+ * التحقق من أن الحساب مرفوض
+ */
+public function isRejected(): bool
+{
+    return $this->account_status === 'rejected';
+}
+
+/**
+ * الموافقة على الحساب
+ */
+public function approve(?int $adminId = null): bool
+{
+    return $this->update([
+        'account_status' => 'active',
+        'rejection_reason' => null,
+        'reviewed_at' => now(),
+        'reviewed_by' => $adminId,
+    ]);
+}
+
+/**
+ * رفض الحساب
+ */
+public function reject(string $reason, ?int $adminId = null): bool
+{
+    return $this->update([
+        'account_status' => 'rejected',
+        'rejection_reason' => $reason,
+        'reviewed_at' => now(),
+        'reviewed_by' => $adminId,
+    ]);
+}
+
+/**
+ * هل يحتاج هذا الدور إلى مراجعة إدارية؟
+ */
+public static function requiresAdminReview(string $role): bool
+{
+    return in_array($role, ['provider']);
+}
 }

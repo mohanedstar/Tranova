@@ -102,7 +102,10 @@ test('يمكن عرض تفاصيل فرصة واحدة', function () {
 
 test('المزود يمكنه إنشاء فرصة جديدة', function () {
     /** @var \App\Models\User $providerUser */
-    $providerUser = User::factory()->create(['role' => 'provider']);
+    $providerUser = User::factory()->create([
+        'role' => 'provider',
+        'account_status' => 'active', // ✅ جديد: ضمان حالة نشطة
+    ]);
     Provider::create([
         'user_id' => $providerUser->id,
         'organization_name' => 'Test Corp',
@@ -163,7 +166,10 @@ test('الطالب لا يمكنه إنشاء فرصة', function () {
 
 test('المزود لا يمكنه إنشاء فرصة بدون بيانات ضرورية', function () {
     /** @var \App\Models\User $providerUser */
-    $providerUser = User::factory()->create(['role' => 'provider']);
+    $providerUser = User::factory()->create([
+        'role' => 'provider',
+        'account_status' => 'active', // ✅ جديد: ضمان حالة نشطة
+    ]);
     Provider::create([
         'user_id' => $providerUser->id,
         'organization_name' => 'Test Corp',

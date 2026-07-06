@@ -2,12 +2,13 @@
 
 <div align="center">
 
-**Complete guide for deploying Trinova Platform to production**
+**Complete guide for deploying Trinova Platform to production with AI features**
 
 ![Render](https://img.shields.io/badge/Render-Recommended-46E3B7?style=flat-square&logo=render)
 ![Docker](https://img.shields.io/badge/Docker-Supported-2496ED?style=flat-square&logo=docker)
 ![AWS](https://img.shields.io/badge/AWS-Supported-FF9900?style=flat-square&logo=amazon-aws)
 ![HTTPS](https://img.shields.io/badge/HTTPS-Required-00C853?style=flat-square)
+![AI](https://img.shields.io/badge/AI-Groq%20LLM-FF6B35?style=flat-square)
 
 </div>
 
@@ -22,6 +23,7 @@
 - [Deploy to AWS](#-deploy-to-aws)
 - [Deploy with Docker](#-deploy-with-docker)
 - [Environment Configuration](#-environment-configuration)
+- [AI Configuration](#-ai-configuration)
 - [Database Setup](#-database-setup)
 - [Storage Configuration](#-storage-configuration)
 - [SSL/HTTPS Setup](#-sslhttps-setup)
@@ -52,7 +54,7 @@
 
 Before deploying, ensure:
 
-- [ ] All tests passing (`php artisan test`)
+- [ ] All tests passing (`php artisan test` - 165+ tests)
 - [ ] `.env` configured for production
 - [ ] `APP_DEBUG=false`
 - [ ] `APP_ENV=production`
@@ -62,6 +64,9 @@ Before deploying, ensure:
 - [ ] Domain configured
 - [ ] Email service configured (SMTP/SendGrid/Mailgun)
 - [ ] File permissions set correctly
+- [ ] **Groq API Key** obtained (for AI features)
+- [ ] **University email domains** configured
+- [ ] **Admin accounts** created for provider review
 
 ---
 
@@ -75,6 +80,7 @@ Before deploying, ensure:
 - ✅ Good performance
 - ✅ Simple configuration
 - ✅ Auto-deploy on push
+- ✅ **AI features work out of the box** (via Groq API)
 
 ---
 
@@ -106,6 +112,14 @@ MAIL_FROM_NAME="Trinova Platform"
 
 QUEUE_CONNECTION=sync
 SESSION_DRIVER=database
+
+# AI Configuration (Groq)
+AI_PROVIDER=groq
+GROQ_API_KEY=your_groq_api_key_here
+GROQ_MODEL=llama-3.3-70b-versatile
+
+# University Email Domains (comma-separated)
+UNIVERSITY_DOMAINS=iugaza.edu.ps,alazhar.edu.ps,up.edu.ps
 ```
 
 #### Create `render.yaml` (Optional)
@@ -134,6 +148,12 @@ services:
         sync: false
       - key: DB_PASSWORD
         sync: false
+      - key: AI_PROVIDER
+        value: groq
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_MODEL
+        value: llama-3.3-70b-versatile
   
   - type: mysql
     name: trinova-db
@@ -177,6 +197,9 @@ DB_USERNAME=trinova
 DB_PASSWORD=your-password
 MAIL_MAILER=log
 QUEUE_CONNECTION=sync
+AI_PROVIDER=groq
+GROQ_API_KEY=your_groq_api_key_here
+GROQ_MODEL=llama-3.3-70b-versatile
 ```
 
 7. Click **Create Web Service**
@@ -248,7 +271,7 @@ Copy the output and add to environment variables as `APP_KEY`.
 # Check health
 curl https://your-app.onrender.com/api/opportunities
 
-# Test registration
+# Test registration (Student)
 curl -X POST https://your-app.onrender.com/api/register \
   -H "Content-Type: application/json" \
   -d '{
@@ -261,6 +284,14 @@ curl -X POST https://your-app.onrender.com/api/register \
     "major": "IT",
     "university": "Test",
     "year_of_study": "3"
+  }'
+
+# Test AI Features
+curl -X POST https://your-app.onrender.com/api/student/ai/reports/improve \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_STUDENT_TOKEN" \
+  -d '{
+    "content": "تعلمت Laravel اليوم وعملت على database"
   }'
 ```
 
@@ -320,7 +351,14 @@ sudo cp .env.example .env
 sudo nano .env
 ```
 
-Update with production values.
+Update with production values including:
+
+```env
+# AI Configuration
+AI_PROVIDER=groq
+GROQ_API_KEY=your_groq_api_key_here
+GROQ_MODEL=llama-3.3-70b-versatile
+```
 
 ### Step 5: Generate Key & Migrate
 
@@ -329,6 +367,7 @@ sudo php artisan key:generate
 sudo php artisan migrate --force
 sudo php artisan db:seed --force
 sudo php artisan storage:link
+sudo php artisan config:cache
 ```
 
 ### Step 6: Set Permissions
@@ -447,6 +486,10 @@ services:
     working_dir: /var/www/
     volumes:
       - ./:/var/www
+    environment:
+      - AI_PROVIDER=groq
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - GROQ_MODEL=llama-3.3-70b-versatile
     networks:
       - trinova
 
@@ -559,6 +602,164 @@ CACHE_STORE=database
 
 # Broadcasting
 BROADCAST_CONNECTION=log
+```
+
+---
+
+## 🤖 AI Configuration
+
+### Groq API Setup (Recommended)
+
+Trinova uses **Groq LLM** for AI-powered report features. Groq is:
+- ✅ **Free** (no credit card required)
+- ✅ **Ultra-fast** (10x faster than OpenAI)
+- ✅ **Excellent Arabic support**
+- ✅ **No quota issues**
+
+#### Step 1: Get Groq API Key
+
+1. Go to [console.groq.com](https://console.groq.com/keys)
+2. Sign in with Google
+3. Click **Create API Key**
+4. Copy the key (starts with `gsk_...`)
+
+#### Step 2: Add to Environment Variables
+
+```env
+# AI Provider Selection
+AI_PROVIDER=groq
+
+# Groq Configuration
+GROQ_API_KEY=gsk_your_groq_api_key_here
+GROQ_MODEL=llama-3.3-70b-versatile
+```
+
+#### Step 3: Test AI Features
+
+```bash
+# In Tinker
+php artisan tinker
+```
+
+```php
+$service = new \App\Services\GeminiService();
+echo $service->generateText('Say hello in Arabic');
+```
+
+### Alternative: Google Gemini API
+
+If you prefer Gemini:
+
+```env
+AI_PROVIDER=gemini
+GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_MODEL=gemini-2.5-flash
+```
+
+⚠️ **Note:** Gemini has quota limits. Groq is recommended.
+
+### AI Features in Production
+
+The following AI endpoints will work automatically:
+
+| Endpoint | Description |
+|----------|-------------|
+| `POST /api/student/ai/reports/improve` | Enhance student reports |
+| `POST /api/student/ai/reports/analyze` | Analyze and grade reports |
+| `POST /api/student/ai/reports/generate` | Generate reports from points |
+| `POST /api/student/ai/reports/suggest` | Smart suggestions |
+
+### Rate Limiting for AI
+
+AI endpoints are rate-limited to prevent abuse:
+
+```php
+// In routes/api.php
+Route::middleware(['throttle:10,1'])->group(function () {
+    Route::post('/reports/improve', ...);
+    Route::post('/reports/analyze', ...);
+    Route::post('/reports/generate', ...);
+    Route::post('/reports/suggest', ...);
+});
+```
+
+---
+
+## 🎓 University Email Configuration
+
+### Configure Allowed Domains
+
+Create or update `config/universities.php`:
+
+```php
+<?php
+
+return [
+    'allowed_domains' => [
+        'iugaza.edu.ps',
+        'alazhar.edu.ps',
+        'up.edu.ps',
+        'alaqsa.edu.ps',
+        'uast.edu.ps',
+    ],
+    
+    'strict_mode' => true,
+];
+```
+
+### Add More Universities
+
+To add more universities, simply add their domains to the array:
+
+```php
+'allowed_domains' => [
+    'iugaza.edu.ps',
+    'alazhar.edu.ps',
+    'up.edu.ps',
+    'alaqsa.edu.ps',
+    'uast.edu.ps',
+    'newuniversity.edu',  // Add new domains here
+],
+```
+
+---
+
+## 🛡️ Admin Review System
+
+### Initial Admin Setup
+
+After deployment, create the first admin account:
+
+```bash
+php artisan tinker
+```
+
+```php
+\App\Models\User::create([
+    'name' => 'System Admin',
+    'email' => 'admin@trinova.com',
+    'password' => bcrypt('StrongPassword123!'),
+    'role' => 'admin',
+    'email_verified_at' => now(),
+    'account_status' => 'active',
+]);
+```
+
+### Provider Review Process
+
+1. New providers register with `account_status = 'pending_review'`
+2. Admin reviews provider details
+3. Admin approves or rejects with reason
+4. Provider receives email notification
+5. Approved providers can create opportunities
+
+### Admin Endpoints
+
+```
+GET    /api/admin/providers           - List all providers
+GET    /api/admin/providers/pending   - List pending providers
+POST   /api/admin/providers/{id}/approve - Approve provider
+POST   /api/admin/providers/{id}/reject  - Reject provider
 ```
 
 ---
@@ -705,6 +906,14 @@ php artisan horizon:install
 - [Pingdom](https://www.pingdom.com/) - Paid
 - [StatusCake](https://www.statuscake.com/) - Free tier
 
+### AI Usage Monitoring
+
+Monitor AI API usage in the logs:
+
+```bash
+tail -f storage/logs/laravel.log | grep "AI"
+```
+
 ---
 
 ## 💾 Backups
@@ -777,6 +986,23 @@ add_header Referrer-Policy "no-referrer-when-downgrade" always;
 add_header Content-Security-Policy "default-src 'self'" always;
 ```
 
+### 6. Protect API Keys
+
+⚠️ **NEVER** commit `.env` to Git!
+
+```bash
+# Add to .gitignore
+.env
+.env.local
+.env.production
+```
+
+### 7. Admin Review Protection
+
+- All new provider accounts require admin approval
+- University email validation for supervisors
+- Rate limiting on registration endpoints
+
 ---
 
 ## 🔄 Updates & Rollbacks
@@ -841,6 +1067,36 @@ chown -R www-data:www-data storage bootstrap/cache
 composer dump-autoload
 ```
 
+### Problem: "AI Features Not Working"
+
+**Solution:**
+- Verify `GROQ_API_KEY` is set in environment
+- Check `AI_PROVIDER=groq` in `.env`
+- Test connection: `php artisan tinker` → `$service = new \App\Services\GeminiService();`
+- Check logs: `tail -f storage/logs/laravel.log | grep "Groq"`
+- Verify API key is valid at [console.groq.com](https://console.groq.com/keys)
+
+### Problem: "Invalid signature" on email verification
+
+**Solution:**
+- Ensure `APP_URL` matches the URL used in the browser
+- Clear config cache: `php artisan config:clear`
+- Regenerate APP_KEY if needed
+
+### Problem: "Provider cannot create opportunities"
+
+**Solution:**
+- Check provider's `account_status` in database
+- Admin must approve the provider first
+- Use: `GET /api/admin/providers/pending` to see pending providers
+
+### Problem: "Supervisor registration fails"
+
+**Solution:**
+- Check if email domain is in `config/universities.php`
+- Verify `UniversityEmail` rule is working
+- Add domain to allowed list if needed
+
 ---
 
 ## 💰 Cost Estimation
@@ -869,6 +1125,24 @@ composer dump-autoload
 | RDS (db.t2.micro) | Free tier (12 months) |
 | **Total** | **Free (12 months)** |
 
+### AI Features (Groq)
+
+| Service | Cost |
+|---------|------|
+| Groq API (Llama 3.3) | **FREE** (no credit card) |
+| Rate Limit | 30 requests/minute |
+| Daily Limit | 14,400 requests/day |
+| **Total** | **$0/month** ✅ |
+
+### Total Cost Summary
+
+| Platform | Base Cost | AI Cost | **Total** |
+|----------|-----------|---------|-----------|
+| **Render** | $0-14 | $0 | **$0-14/month** |
+| **DigitalOcean** | $21 | $0 | **$21/month** |
+| **AWS** | $0 (12mo) | $0 | **$0/month** |
+| **Docker** | Varies | $0 | **Varies** |
+
 ---
 
 ## 📞 Support
@@ -879,6 +1153,25 @@ For deployment issues:
 - [Laravel Deployment Guide](https://laravel.com/docs/deployment)
 - [DigitalOcean Tutorials](https://www.digitalocean.com/community/tutorials)
 - [Laracasts](https://laracasts.com/)
+- [Groq Documentation](https://console.groq.com/docs)
+
+---
+
+## 🎯 Post-Deployment Checklist
+
+After successful deployment:
+
+- [ ] Verify all API endpoints work
+- [ ] Test AI features (improve, analyze, generate, suggest)
+- [ ] Create initial admin account
+- [ ] Configure university email domains
+- [ ] Test provider approval workflow
+- [ ] Verify email notifications work
+- [ ] Test file uploads (CV, certificates)
+- [ ] Check SSL certificate
+- [ ] Monitor logs for errors
+- [ ] Set up backups
+- [ ] Configure rate limiting
 
 ---
 
@@ -887,5 +1180,7 @@ For deployment issues:
 **📖 Back to [README.md](../README.md) | [API Documentation](API.md) | [Frontend Guide](FRONTEND.md)**
 
 **Made with ❤️ by Trinova Team**
+
+**Powered by Groq AI 🤖**
 
 </div>

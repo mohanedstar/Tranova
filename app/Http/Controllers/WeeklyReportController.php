@@ -193,4 +193,63 @@ public function store(StoreWeeklyReportRequest $request)
             'report' => $report
         ]);
     }
+
+    // عرض الطلاب المتأخرين في تسليم التقارير (للمشرف)
+public function lateStudents(Request $request)
+{
+    $supervisor = $request->user()->supervisor;
+
+    if (!$supervisor) {
+        return response()->json([
+            'message' => 'بيانات المشرف غير مكتملة'
+        ], 400);
+    }
+
+    // الحصول على طلاب المشرف
+    $studentIds = $supervisor->currentStudents()->pluck('students.id');
+
+    if ($studentIds->isEmpty()) {
+        return response()->json([
+            'success' => true,
+            'late_students' => [],
+            'message' => 'لا يوجد طلاب مسندين إليك حالياً'
+        ]);
+    }
+
+    // تحديد آخر أسبوع يجب أن يكون قد تم تسليم تقريره
+    // نفترض أن التقارير تُسلم أسبوعياً - آخر تقرير يجب أن يكون خلال آخر 14 يوماً
+    $deadline = now()->subDays(14);
+
+    // البحث عن الطلاب الذين لم يسلموا تقريراً منذ التاريخ المحدد
+    $lateStudents = \App\Models\Student::whereIn('id', $studentIds)
+        ->whereDoesntHave('weeklyReports', function ($query) use ($deadline) {
+            $query->where('submitted_at', '>=', $deadline);
+        })
+        ->with(['user', 'weeklyReports' => function ($query) {
+            $query->orderBy('submitted_at', 'desc')->limit(1);
+        }])
+        ->get()
+        ->map(function ($student) {
+            $lastReport = $student->weeklyReports->first();
+            return [
+                'student_id' => $student->id,
+                'student_number' => $student->student_id,
+                'name' => $student->user->name,
+                'email' => $student->user->email,
+                'major' => $student->major,
+                'last_report_date' => $lastReport?->submitted_at?->format('Y-m-d'),
+                'days_since_last_report' => $lastReport?->submitted_at
+                    ? now()->diffInDays($lastReport->submitted_at)
+                    : null,
+                'status' => $lastReport ? 'late' : 'never_submitted',
+            ];
+        });
+
+    return response()->json([
+        'success' => true,
+        'late_students' => $lateStudents,
+        'count' => $lateStudents->count(),
+        'deadline' => $deadline->format('Y-m-d'),
+    ]);
+}
 }

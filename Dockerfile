@@ -72,11 +72,12 @@ RUN mkdir -p \
     /var/log/supervisor \
     /run/nginx
 
-# Set permissions
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 775 /var/www/html/storage \
-    && chmod -R 775 /var/www/html/bootstrap/cache
-
+# Set permissions (FIXED for Alpine Linux)
+RUN chmod -R 777 /var/www/html/storage \
+    && chmod -R 777 /var/www/html/bootstrap/cache \
+    && chmod -R 777 /var/log/supervisor \
+    && touch /var/www/html/storage/logs/laravel.log \
+    && chmod 777 /var/www/html/storage/logs/laravel.log
 # Create storage link
 RUN php artisan storage:link || true
 

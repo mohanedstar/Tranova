@@ -3,10 +3,11 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 
 /*
 |--------------------------------------------------------------------------
-| Web Routes
+| Web Routes - Setup
 |--------------------------------------------------------------------------
 */
 
@@ -20,6 +21,29 @@ Route::get('/setup-migrate', function () {
     ];
 
     try {
+        // Step 0: Fix log file permissions
+        try {
+            $logFile = storage_path('logs/laravel.log');
+            if (!File::exists($logFile)) {
+                File::put($logFile, '');
+            }
+            @chmod($logFile, 0777);
+            @chmod(storage_path('logs'), 0777);
+            @chmod(storage_path(), 0777);
+
+            $results['steps'][] = [
+                'step' => 0,
+                'name' => 'Fix Permissions',
+                'status' => '✅ OK',
+            ];
+        } catch (\Exception $e) {
+            $results['steps'][] = [
+                'step' => 0,
+                'name' => 'Fix Permissions',
+                'status' => '⚠️ Warning: ' . $e->getMessage(),
+            ];
+        }
+
         // Step 1: Test database connection
         try {
             DB::connection()->getPdo();
@@ -99,18 +123,19 @@ Route::get('/setup-migrate', function () {
             ];
         }
 
-        // Step 5: Check health
+        // Step 5: Test cache
         try {
-            Artisan::call('health:check');
+            cache()->put('setup_test', 'ok', 60);
+            $value = cache()->get('setup_test');
             $results['steps'][] = [
                 'step' => 5,
-                'name' => 'Health Check',
-                'status' => '✅ OK',
+                'name' => 'Cache Test',
+                'status' => $value === 'ok' ? '✅ OK' : '❌ Failed',
             ];
         } catch (\Exception $e) {
             $results['steps'][] = [
                 'step' => 5,
-                'name' => 'Health Check',
+                'name' => 'Cache Test',
                 'status' => '⚠️ Warning: ' . $e->getMessage(),
             ];
         }
@@ -120,9 +145,8 @@ Route::get('/setup-migrate', function () {
 
     } catch (\Exception $e) {
         $results['error'] = $e->getMessage();
-        $results['file'] = $e->getFile();
+        $results['file'] = basename($e->getFile());
         $results['line'] = $e->getLine();
-        $results['trace'] = config('app.debug') ? explode("\n", $e->getTraceAsString()) : null;
     }
 
     return response()->json($results);

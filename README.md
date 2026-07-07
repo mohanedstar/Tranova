@@ -745,7 +745,7 @@ Accept-Language: ar,en;q=0.9
 - `GET /api/messages/sent` - Get sent messages
 - `POST /api/messages/{id}/read` - Mark as read
 
-#### 🤖 AI Features (Student Only)
+#### 🤖 AI Features (Student and Supervisor)
 
 - `POST /api/student/ai/reports/improve` - Improve report
 - `POST /api/student/ai/reports/analyze` - Analyze report

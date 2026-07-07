@@ -11,6 +11,14 @@ class ProviderSeeder extends Seeder
 {
     public function run(): void
     {
+        // ✅ في الإنتاج: تخطي تماماً
+        if (app()->environment('production')) {
+            $this->command->info('⏭️  Skipping ProviderSeeder in production');
+            return;
+        }
+
+        $this->command->info('🔧 Creating test providers...');
+
         $providers = [
             [
                 'name' => 'شركة تك كورب',
@@ -29,7 +37,7 @@ class ProviderSeeder extends Seeder
             ],
             [
                 'name' => 'مستشفى الشفاء',
-                'email' => 'training@shifa hospital.com',
+                'email' => 'training@shifahospital.com', // ✅ إصلاح الخطأ الإملائي
                 'phone' => '022222222',
                 'provider_data' => [
                     'organization_name' => 'مستشفى الشفاء',
@@ -51,6 +59,9 @@ class ProviderSeeder extends Seeder
                 'password' => Hash::make('password123'),
                 'phone' => $providerData['phone'],
                 'role' => 'provider',
+                'email_verified_at' => now(), // ✅ مهم جداً
+                'account_status' => 'active', // ✅ مهم جداً
+                'preferred_language' => 'ar',
             ]);
 
             Provider::create([
@@ -65,5 +76,7 @@ class ProviderSeeder extends Seeder
                 'is_verified' => $providerData['provider_data']['is_verified'],
             ]);
         }
+
+        $this->command->info('✅ ' . count($providers) . ' providers created');
     }
 }

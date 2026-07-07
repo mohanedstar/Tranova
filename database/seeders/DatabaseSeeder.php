@@ -6,26 +6,36 @@ use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
+    /**
+     * البوابة الرئيسية للـ seeders
+     * يختار تلقائياً بين الإنتاج والتطوير
+     */
     public function run(): void
     {
-        $this->command->info('🌱 بدء ملء قاعدة البيانات...');
+        // ✅ في بيئة الإنتاج: بيانات آمنة فقط
+        if (app()->environment('production')) {
+            $this->command->newLine();
+            $this->command->warn('═══════════════════════════════════════════════════');
+            $this->command->warn('🚀 PRODUCTION ENVIRONMENT DETECTED');
+            $this->command->warn('═══════════════════════════════════════════════════');
+            $this->command->info('Running ProductionSeeder (safe data only)...');
+            $this->command->newLine();
+
+            $this->call([
+                ProductionSeeder::class,
+            ]);
+
+            return;
+        }
+
+        // ✅ في بيئة التطوير: كل البيانات
+        $this->command->newLine();
+        $this->command->info('🔧 DEVELOPMENT ENVIRONMENT DETECTED');
+        $this->command->info('Running DevelopmentSeeder (all test data)...');
+        $this->command->newLine();
 
         $this->call([
-            AdminSeeder::class,
-            StudentSeeder::class,
-            ProviderSeeder::class,
-            SupervisorSeeder::class,
-            InternshipOpportunitySeeder::class,
+            DevelopmentSeeder::class,
         ]);
-
-        $this->command->info('✅ تم ملء قاعدة البيانات بنجاح!');
-        $this->command->info('');
-        $this->command->info('📧 بيانات الدخول:');
-        $this->command->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        $this->command->info('👨‍💼 Admin:    admin@trinova.com / admin123');
-        $this->command->info('👨‍🎓 Student:  ahmed@student.com / password123');
-        $this->command->info('🏢 Provider:  hr@techcorp.com / password123');
-        $this->command->info('👨‍🏫 Supervisor: dr.mohammed@university.edu / password123');
-        $this->command->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     }
 }

@@ -10,12 +10,20 @@ class InternshipOpportunitySeeder extends Seeder
 {
     public function run(): void
     {
+        // ✅ في الإنتاج: تخطي تماماً
+        if (app()->environment('production')) {
+            $this->command->info('⏭️  Skipping InternshipOpportunitySeeder in production');
+            return;
+        }
+
         $providers = Provider::all();
 
         if ($providers->isEmpty()) {
-            $this->command->warn('لا يوجد مزودون. يرجى تشغيل ProviderSeeder أولاً.');
+            $this->command->warn('⚠️  لا يوجد مزودون. يرجى تشغيل ProviderSeeder أولاً.');
             return;
         }
+
+        $this->command->info('🔧 Creating test opportunities...');
 
         $opportunities = [
             [
@@ -96,5 +104,7 @@ class InternshipOpportunitySeeder extends Seeder
                 'salary' => $opportunityData['salary'] ?? null,
             ]);
         }
+
+        $this->command->info('✅ ' . count($opportunities) . ' opportunities created');
     }
 }

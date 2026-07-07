@@ -11,10 +11,18 @@ class SupervisorSeeder extends Seeder
 {
     public function run(): void
     {
+        // ✅ في الإنتاج: تخطي تماماً
+        if (app()->environment('production')) {
+            $this->command->info('⏭️  Skipping SupervisorSeeder in production');
+            return;
+        }
+
+        $this->command->info('🔧 Creating test supervisors...');
+
         $supervisors = [
             [
                 'name' => 'د. محمد أحمد',
-                'email' => 'dr.mohammed@university.edu',
+                'email' => 'dr.mohammed@iugaza.edu.ps', // ✅ إصلاح النطاق الجامعي
                 'phone' => '0594444444',
                 'supervisor_data' => [
                     'employee_id' => 'EMP001',
@@ -27,7 +35,7 @@ class SupervisorSeeder extends Seeder
             ],
             [
                 'name' => 'د. فاطمة علي',
-                'email' => 'dr.fatima@university.edu',
+                'email' => 'dr.fatima@alazhar.edu.ps', // ✅ إصلاح النطاق الجامعي
                 'phone' => '0595555555',
                 'supervisor_data' => [
                     'employee_id' => 'EMP002',
@@ -47,6 +55,9 @@ class SupervisorSeeder extends Seeder
                 'password' => Hash::make('password123'),
                 'phone' => $supervisorData['phone'],
                 'role' => 'supervisor',
+                'email_verified_at' => now(), // ✅ مهم جداً
+                'account_status' => 'active', // ✅ مهم جداً
+                'preferred_language' => 'ar',
             ]);
 
             Supervisor::create([
@@ -59,5 +70,7 @@ class SupervisorSeeder extends Seeder
                 'max_students' => $supervisorData['supervisor_data']['max_students'],
             ]);
         }
+
+        $this->command->info('✅ ' . count($supervisors) . ' supervisors created');
     }
 }

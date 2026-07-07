@@ -59,7 +59,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/supervisor/dashboard', [DashboardController::class, 'supervisorDashboard'])->middleware('role:supervisor');
     Route::get('/admin/dashboard', [DashboardController::class, 'adminDashboard'])->middleware('role:admin');
 
-    // ==================== Language Settings ====================
+// ==================== Language Settings ====================
     Route::post('/user/language', function (Request $request) {
         $request->validate([
             'language' => 'required|in:ar,en',
@@ -69,10 +69,12 @@ Route::middleware('auth:sanctum')->group(function () {
         $user->preferred_language = $request->language;
         $saved = $user->save();
 
+        // ✅ تعيين اللغة الجديدة فوراً للاستجابة الحالية
+        app()->setLocale($request->language);
+
         \Illuminate\Support\Facades\Log::info('Language Updated', [
             'user_id' => $user->id,
             'language' => $request->language,
-            'saved' => $saved,
             'preferred_language' => $user->preferred_language,
         ]);
 
@@ -132,9 +134,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/reports', [WeeklyReportController::class, 'studentReports']);
         Route::post('/reports/{report}/review', [WeeklyReportController::class, 'review']);
         Route::get('/students/late', [WeeklyReportController::class, 'lateStudents']);
-
-        Route::post('/evaluations', [EvaluationController::class, 'storeSupervisorEvaluation']);
-    });
+         Route::post('/evaluations', [EvaluationController::class, 'storeSupervisorEvaluation']);
+    Route::prefix('ai')->group(function () {
+            Route::post('/reports/improve', [\App\Http\Controllers\AIReportController::class, 'improveReport']);
+            Route::post('/reports/analyze', [\App\Http\Controllers\AIReportController::class, 'analyzeReport']);
+            Route::post('/reports/generate', [\App\Http\Controllers\AIReportController::class, 'generateReport']);
+            Route::post('/reports/suggest', [\App\Http\Controllers\AIReportController::class, 'suggestContent']);
+        });
+        });
 
     // ==================== Admin Routes ====================
     Route::middleware('role:admin')->prefix('admin')->group(function () {

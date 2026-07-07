@@ -5,6 +5,7 @@ use App\Models\Student;
 use App\Models\Provider;
 use App\Models\Supervisor;
 use App\Services\GeminiService;
+use Mockery;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -636,4 +637,182 @@ test('كشف النص المختلط (أغلبه عربي) كعربي', function
 
     $response->assertStatus(200);
     expect($response->json('data.detected_language'))->toBe('arabic');
+});
+
+// ═══════════════════════════════════════════════════════════════
+// 👨‍🏫 Supervisor AI Features Tests (NEW)
+// ═══════════════════════════════════════════════════════════════
+
+test('المشرف يمكنه تحسين تقرير عربي', function () {
+    mockGeminiService('خلال هذا اليوم، ركزت على تطوير مهاراتي في إطار عمل Laravel...');
+
+    $response = $this->actingAs($this->supervisorUser)
+        ->postJson('/api/supervisor/ai/reports/improve', [
+            'content' => 'تعلمت Laravel اليوم',
+        ]);
+
+    $response->assertStatus(200)
+        ->assertJson([
+            'success' => true,
+            'message' => __('messages.ai.improve_success'),
+        ])
+        ->assertJsonStructure([
+            'data' => [
+                'original_content',
+                'improved_content',
+                'detected_language',
+                'original_word_count',
+                'improved_word_count',
+                'ai_model',
+            ],
+        ]);
+});
+
+test('المشرف يمكنه تحسين تقرير إنجليزي', function () {
+    mockGeminiService('During this day, I focused on developing my skills in Laravel framework...');
+
+    $response = $this->actingAs($this->supervisorUser)
+        ->postJson('/api/supervisor/ai/reports/improve', [
+            'content' => 'I learned Laravel today',
+        ]);
+
+    $response->assertStatus(200)
+        ->assertJson([
+            'success' => true,
+            'data' => [
+                'detected_language' => 'english',
+            ],
+        ]);
+});
+
+test('المشرف يمكنه تحليل تقرير', function () {
+    $aiResponse = json_encode([
+        'quality_score' => 85,
+        'grade' => 'good',
+        'strengths' => ['محتوى جيد', 'تنظيم واضح'],
+        'weaknesses' => ['يحتاج أمثلة عملية'],
+        'improvements' => ['أضف تفاصيل تقنية'],
+        'detailed_feedback' => 'التقرير جيد بشكل عام',
+        'criteria_scores' => [
+            'content_quality' => 85,
+            'structure' => 80,
+            'language' => 90,
+            'professionalism' => 85,
+        ],
+    ]);
+
+    mockGeminiService($aiResponse);
+
+    $response = $this->actingAs($this->supervisorUser)
+        ->postJson('/api/supervisor/ai/reports/analyze', [
+            'content' => 'تعلمت Laravel اليوم وعملت على database',
+        ]);
+
+    $response->assertStatus(200)
+        ->assertJson([
+            'success' => true,
+            'message' => __('messages.ai.analyze_success'),
+        ])
+        ->assertJsonStructure([
+            'data' => [
+                'quality_score',
+                'grade',
+                'strengths',
+                'weaknesses',
+                'improvements',
+                'detailed_feedback',
+                'criteria_scores',
+                'statistics',
+                'detected_language',
+                'ai_model',
+            ],
+        ]);
+});
+
+test('المشرف يمكنه توليد تقرير من نقاط', function () {
+    mockGeminiService('خلال هذا الأسبوع، ركزت على تطوير مهاراتي في إطار عمل Laravel...');
+
+    $response = $this->actingAs($this->supervisorUser)
+        ->postJson('/api/supervisor/ai/reports/generate', [
+            'points' => [
+                'تعلمت Laravel',
+                'عملت على database',
+                'طورت API',
+            ],
+            'context' => 'الأسبوع الأول من التدريب',
+        ]);
+
+    $response->assertStatus(200)
+        ->assertJson([
+            'success' => true,
+            'message' => __('messages.ai.generate_success'),
+        ])
+        ->assertJsonStructure([
+            'data' => [
+                'input_points',
+                'context',
+                'generated_report',
+                'detected_language',
+                'points_count',
+                'report_statistics',
+                'ai_model',
+            ],
+        ]);
+});
+
+test('المشرف يمكنه الحصول على اقتراحات', function () {
+    $aiResponse = json_encode([
+        'suggested_topics' => ['تطوير APIs', 'إدارة قواعد البيانات'],
+        'suggested_tasks' => ['بناء نموذج Student', 'كتابة اختبارات'],
+        'suggested_challenges' => ['فهم العلاقات المعقدة'],
+        'suggested_skills_learned' => ['تطوير RESTful APIs'],
+        'writing_tips' => ['استخدم مصطلحات تقنية'],
+        'example_bullet_points' => ['طورت نظام مصادقة'],
+    ]);
+
+    mockGeminiService($aiResponse);
+
+    $response = $this->actingAs($this->supervisorUser)
+        ->postJson('/api/supervisor/ai/reports/suggest', [
+            'major' => 'تقنية المعلومات',
+            'week_number' => 3,
+        ]);
+
+    $response->assertStatus(200)
+        ->assertJson([
+            'success' => true,
+            'message' => __('messages.ai.suggest_success'),
+        ])
+        ->assertJsonStructure([
+            'data' => [
+                'suggested_topics',
+                'suggested_tasks',
+                'suggested_challenges',
+                'suggested_skills_learned',
+                'writing_tips',
+                'example_bullet_points',
+                'major',
+                'week_number',
+                'detected_language',
+                'ai_model',
+            ],
+        ]);
+});
+
+test('المزود لا يمكنه استخدام ميزات AI للمشرف', function () {
+    $response = $this->actingAs($this->providerUser)
+        ->postJson('/api/supervisor/ai/reports/improve', [
+            'content' => 'تعلمت Laravel اليوم',
+        ]);
+
+    $response->assertStatus(403);
+});
+
+test('الطالب لا يمكنه استخدام ميزات AI للمشرف', function () {
+    $response = $this->actingAs($this->studentUser)
+        ->postJson('/api/supervisor/ai/reports/improve', [
+            'content' => 'تعلمت Laravel اليوم',
+        ]);
+
+    $response->assertStatus(403);
 });

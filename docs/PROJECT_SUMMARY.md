@@ -104,8 +104,90 @@
 
 ## 🤖 AI-Powered Features
 
-Trinova integrates advanced AI capabilities using **Groq LLM** (Llama 3.3 70B) to help students write better internship reports.
+Trinova integrates advanced AI capabilities using **Groq LLM** (Llama 3.3 70B) to help students and supervisors write and review better internship reports.
 
+### AI Features Overview
+
+#### For Students:
+
+| Feature | Description | Endpoint |
+|---------|-------------|----------|
+| **Improve Report** | Enhance reports with professional language | `POST /api/student/ai/reports/improve` |
+| **Analyze Report** | Get quality score, strengths, weaknesses | `POST /api/student/ai/reports/analyze` |
+| **Generate Report** | Create full report from bullet points | `POST /api/student/ai/reports/generate` |
+| **Smart Suggestions** | Get topic suggestions based on major | `POST /api/student/ai/reports/suggest` |
+
+#### For Supervisors (NEW):
+
+| Feature | Description | Endpoint |
+|---------|-------------|----------|
+| **Improve Report** | Review and enhance student reports | `POST /api/supervisor/ai/reports/improve` |
+| **Analyze Report** | Analyze student reports before grading | `POST /api/supervisor/ai/reports/analyze` |
+| **Generate Report** | Create example reports for guidance | `POST /api/supervisor/ai/reports/generate` |
+| **Smart Suggestions** | Provide topic suggestions to students | `POST /api/supervisor/ai/reports/suggest` |
+
+### AI Capabilities
+
+- ✅ **Automatic Language Detection** (Arabic/English)
+- ✅ **Multi-language Support** - Responds in the same language as input
+- ✅ **Professional Enhancement** - Academic tone and terminology
+- ✅ **Quality Scoring** - 0-100 score with detailed feedback
+- ✅ **Smart Suggestions** - Context-aware recommendations
+- ✅ **Statistics** - Word count, reading time, sentence analysis
+- ✅ **Dual Access** - Available for both students and supervisors
+
+### AI Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  Student/Supervisor writes or reviews report             │
+│     ↓                                                   │
+│  AIReportController                                      │
+│     ↓                                                   │
+│  GeminiService (supports Groq & Gemini)                  │
+│     ↓                                                   │
+│  Groq API (Llama 3.3 70B)                                │
+│     ↓                                                   │
+│  Enhanced/Analyzed/Generated report                      │
+└─────────────────────────────────────────────────────────┘
+```
+
+### AI Response Examples
+
+**Improve Report:**
+```json
+{
+    "original_content": "تعلمت Laravel اليوم",
+    "improved_content": "خلال هذا اليوم، ركزت على تطوير مهاراتي في إطار عمل Laravel...",
+    "detected_language": "arabic",
+    "original_word_count": 3,
+    "improved_word_count": 45
+}
+```
+
+**Analyze Report:**
+```json
+{
+    "quality_score": 85,
+    "grade": "good",
+    "strengths": ["محتوى جيد", "تنظيم واضح"],
+    "weaknesses": ["يحتاج أمثلة عملية"],
+    "criteria_scores": {
+        "content_quality": 85,
+        "structure": 80,
+        "language": 90,
+        "professionalism": 85
+    }
+}
+```
+
+### Supervisor AI Use Cases
+
+1. **Report Review** - Analyze quality before grading
+2. **Example Generation** - Create model reports for students
+3. **Consistent Evaluation** - Maintain evaluation standards
+4. **Feedback Enhancement** - Provide detailed, constructive feedback
+5. **Batch Analysis** - Review multiple reports efficiently
 ### AI Features Overview
 
 | Feature | Description | Endpoint |
@@ -437,14 +519,14 @@ Supervisors must register with approved university email domains:
 | Password Reset | 11 | ✅ Passing | Token/Reset/Invalidate |
 | Email Verification | 19 | ✅ Passing | Verify/Resend/Block |
 | Admin Provider Review | 11 | ✅ Passing | Approve/Reject/Workflow |
-| **Admin User Management** | **51** | ✅ **Passing** | **Full CRUD + Actions** |
-| **Admin Provider Management** | **14** | ✅ **Passing** | **List/Approve/Reject** |
+| Admin User Management | 51 | ✅ Passing | Full CRUD + Actions |
+| Admin Provider Management | 14 | ✅ Passing | List/Approve/Reject |
 | Applicant Profile | 5 | ✅ Passing | View/Permission |
 | Late Students | 5 | ✅ Passing | Identify/Permission |
 | Reopen Opportunity | 5 | ✅ Passing | Close/Reopen/Permission |
 | University Email Validation | 5 | ✅ Passing | Domain Validation |
-| AI Report Features | 35 | ✅ Passing | All AI Endpoints |
-| **Total** | **227+** | ✅ **All Passing** | **Full Feature Coverage** |
+| AI Report Features | 42 | ✅ Passing | Student + Supervisor |
+| **Total** | **274+** | ✅ **All Passing** | **Full Feature Coverage** |
 
 ### Testing Tools & Practices
 

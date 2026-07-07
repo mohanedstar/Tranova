@@ -86,6 +86,83 @@
 
 ## 🤖 AI-Powered Features
 
+Trinova integrates advanced AI capabilities using **Groq LLM** to help students and supervisors write and review better internship reports.
+
+### 🎯 AI Features
+
+AI features are available for both **Students** and **Supervisors**:
+
+#### For Students:
+
+| Feature | Description | Endpoint |
+|---------|-------------|----------|
+| **Improve Report** | Enhance student reports with professional language | `POST /api/student/ai/reports/improve` |
+| **Analyze Report** | Get quality score, strengths, weaknesses, and suggestions | `POST /api/student/ai/reports/analyze` |
+| **Generate Report** | Create full report from bullet points | `POST /api/student/ai/reports/generate` |
+| **Smart Suggestions** | Get topic suggestions based on major and week | `POST /api/student/ai/reports/suggest` |
+
+#### For Supervisors:
+
+| Feature | Description | Endpoint |
+|---------|-------------|----------|
+| **Improve Report** | Review and enhance student reports | `POST /api/supervisor/ai/reports/improve` |
+| **Analyze Report** | Analyze student reports before grading | `POST /api/supervisor/ai/reports/analyze` |
+| **Generate Report** | Create example reports for guidance | `POST /api/supervisor/ai/reports/generate` |
+| **Smart Suggestions** | Provide topic suggestions to students | `POST /api/supervisor/ai/reports/suggest` |
+
+**Note:** Supervisors can use the same AI features to help review and analyze student reports more effectively.
+
+### 🌍 Language Support (AI)
+
+- ✅ **Automatic language detection** (Arabic/English)
+- ✅ Responds in the same language as the input
+- ✅ Supports mixed-language content
+- ✅ Context-aware professional terminology
+
+### 📊 AI Response Examples
+
+**Improve Report:**
+
+```json
+{
+    "original_content": "تعلمت Laravel اليوم",
+    "improved_content": "خلال هذا اليوم، ركزت على تطوير مهاراتي في إطار عمل Laravel...",
+    "detected_language": "arabic",
+    "ai_model": "llama-3.3-70b-versatile"
+}
+```
+
+**Analyze Report:**
+
+```json
+{
+    "quality_score": 85,
+    "grade": "good",
+    "strengths": ["محتوى جيد", "تنظيم واضح"],
+    "weaknesses": ["يحتاج أمثلة عملية"],
+    "improvements": ["أضف تفاصيل تقنية"],
+    "criteria_scores": {
+        "content_quality": 85,
+        "structure": 80,
+        "language": 90,
+        "professionalism": 85
+    }
+}
+```
+
+**Generate Report:**
+
+```json
+{
+    "input_points": ["تعلمت Laravel", "عملت على database"],
+    "generated_report": "خلال هذا الأسبوع، ركزت على...",
+    "report_statistics": {
+        "word_count": 85,
+        "sentence_count": 5,
+        "estimated_reading_time_minutes": 1
+    }
+}
+```
 Trinova integrates advanced AI capabilities using **Groq LLM** to help students write better internship reports:
 
 ### 🎯 AI Features

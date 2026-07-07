@@ -20,11 +20,9 @@ class AIReportController extends Controller
      */
     protected function detectLanguage(string $text): string
     {
-        // عدّ الأحرف العربية
         $arabicChars = preg_match_all('/[\p{Arabic}]/u', $text);
         $totalChars = mb_strlen($text);
 
-        // إذا كانت نسبة الأحرف العربية > 30%، اعتبرها عربية
         if ($totalChars > 0 && ($arabicChars / $totalChars) > 0.3) {
             return 'arabic';
         }
@@ -41,11 +39,9 @@ class AIReportController extends Controller
         $sentences = preg_split('/[.!?؟。]+/', $text, -1, PREG_SPLIT_NO_EMPTY);
         $paragraphs = preg_split('/\n\s*\n/', $text, -1, PREG_SPLIT_NO_EMPTY);
 
-        // حساب عدد الأحرف
         $charCount = mb_strlen($text);
         $charCountNoSpaces = mb_strlen(str_replace(' ', '', $text));
 
-        // متوسط طول الجملة
         $avgSentenceLength = count($sentences) > 0 ? round($words / count($sentences), 1) : 0;
 
         return [
@@ -61,9 +57,9 @@ class AIReportController extends Controller
 
     /**
      * ========================================
-     * الميزة A: تحسين تقرير الطالب (AI Report Improver)
+     * الميزة A: تحسين التقرير (AI Report Improver)
      * ========================================
-     * يحسّن تقرير الطالب ويضيف مصطلحات احترافية
+     * ✅ يعمل للطالب والمشرف
      */
     public function improveReport(Request $request)
     {
@@ -76,16 +72,15 @@ class AIReportController extends Controller
 
         $originalContent = $request->input('content');
 
-        // ✅ كشف لغة النص تلقائياً
         $detectedLanguage = $this->detectLanguage($originalContent);
         $languageName = $detectedLanguage === 'arabic' ? 'Arabic' : 'English';
 
         Log::info('Detected language for AI improvement', [
             'language' => $detectedLanguage,
             'content_preview' => substr($originalContent, 0, 50),
+            'user_role' => $request->user()->role, // ✅ Log للدور
         ]);
 
-        // ✅ Prompt ذكي يحافظ على نفس اللغة
         $prompt = "You are a smart and professional assistant specialized in improving weekly internship training reports for university students.
 
 Your task is to rewrite the following report to make it more professional, academic, and detailed.
@@ -95,7 +90,7 @@ CRITICAL RULES:
 2. If the original text is in English, your entire response MUST be in English.
 3. If the original text is in Arabic, your entire response MUST be in Arabic.
 4. Do NOT mix languages.
-5. Do NOT add any introductory phrases like 'Here is the improved version' or __('messages.ai.intro_improved').
+5. Do NOT add any introductory phrases like 'Here is the improved version' or 'إليك النسخة المحسنة'.
 6. Return ONLY the improved text, nothing else.
 
 IMPROVEMENT GUIDELINES:
@@ -121,7 +116,6 @@ Improved text (in {$languageName}):";
                 ], 500);
             }
 
-            // تنظيف الاستجابة
             $improvedContent = trim(str_replace(['```markdown', '```', '```text'], '', $improvedContent));
 
             return response()->json([
@@ -148,9 +142,9 @@ Improved text (in {$languageName}):";
 
     /**
      * ========================================
-     * الميزة B: تحليل تقرير الطالب (AI Report Analyzer)
+     * الميزة B: تحليل التقرير (AI Report Analyzer)
      * ========================================
-     * يحلل التقرير ويعطي درجة + نقاط قوة وضعف + اقتراحات
+     * ✅ يعمل للطالب والمشرف
      */
     public function analyzeReport(Request $request)
     {
@@ -168,9 +162,9 @@ Improved text (in {$languageName}):";
         Log::info('Analyzing report with AI', [
             'language' => $detectedLanguage,
             'content_length' => strlen($content),
+            'user_role' => $request->user()->role, // ✅ Log للدور
         ]);
 
-        // Prompt للتحليل
         $prompt = "You are an expert academic evaluator specialized in assessing internship training reports for university students.
 
 Your task is to analyze the following student report and provide a comprehensive evaluation.
@@ -218,10 +212,7 @@ Respond with ONLY the JSON object, no other text.";
                 ], 500);
             }
 
-            // تنظيف الاستجابة من أي علامات تنسيق
             $cleanResponse = trim(str_replace(['```json', '```', '```text'], '', $aiResponse));
-
-            // محاولة تحليل JSON
             $analysis = json_decode($cleanResponse, true);
 
             if (!$analysis) {
@@ -229,7 +220,6 @@ Respond with ONLY the JSON object, no other text.";
                     'response' => $cleanResponse,
                 ]);
 
-                // إذا فشل التحليل، نرجع استجابة افتراضية
                 return response()->json([
                     'success' => true,
                     'message' => __('messages.ai.analyze_default'),
@@ -261,7 +251,6 @@ Respond with ONLY the JSON object, no other text.";
                 ]);
             }
 
-            // حساب إحصائيات النص
             $stats = $this->calculateTextStats($content, $detectedLanguage);
 
             return response()->json([
@@ -297,9 +286,9 @@ Respond with ONLY the JSON object, no other text.";
 
     /**
      * ========================================
-     * الميزة C: توليد تقرير كامل من نقاط بسيطة (AI Report Generator)
+     * الميزة C: توليد تقرير كامل (AI Report Generator)
      * ========================================
-     * يولّد تقرير كامل من نقاط يكتبها الطالب
+     * ✅ يعمل للطالب والمشرف
      */
     public function generateReport(Request $request)
     {
@@ -318,7 +307,6 @@ Respond with ONLY the JSON object, no other text.";
         $points = $request->input('points');
         $context = $request->input('context', '');
 
-        // دمج النقاط في نص واحد للكشف عن اللغة
         $combinedText = implode(' ', $points);
         $detectedLanguage = $this->detectLanguage($combinedText);
         $languageName = $detectedLanguage === 'arabic' ? 'Arabic' : 'English';
@@ -327,21 +315,19 @@ Respond with ONLY the JSON object, no other text.";
             'language' => $detectedLanguage,
             'points_count' => count($points),
             'has_context' => !empty($context),
+            'user_role' => $request->user()->role, // ✅ Log للدور
         ]);
 
-        // تنسيق النقاط للـ Prompt
         $formattedPoints = '';
         foreach ($points as $index => $point) {
             $formattedPoints .= ($index + 1) . '. ' . $point . "\n";
         }
 
-        // ✅ إصلاح مشكلة Intelephense P1001: استخراج التعبير الشرطي خارج الـ string
         $contextSection = '';
         if (!empty($context)) {
             $contextSection = "ADDITIONAL CONTEXT:\n{$context}\n\n";
         }
 
-        // Prompt للتوليد
         $prompt = "You are an expert academic writer specialized in creating professional internship training reports for university students.
 
 Your task is to generate a complete, professional weekly internship report based on the bullet points provided by the student.
@@ -351,7 +337,7 @@ CRITICAL RULES:
 2. If the points are in English, the entire report MUST be in English.
 3. If the points are in Arabic, the entire report MUST be in Arabic.
 4. Do NOT mix languages.
-5. Do NOT add any introductory phrases like 'Here is the report' or __('messages.ai.intro_report').
+5. Do NOT add any introductory phrases like 'Here is the report' or 'إليك التقرير'.
 6. Return ONLY the report content, nothing else.
 
 REPORT STRUCTURE:
@@ -386,10 +372,7 @@ Generate the complete professional report (in {$languageName}):";
                 ], 500);
             }
 
-            // تنظيف الاستجابة
             $generatedReport = trim(str_replace(['```markdown', '```', '```text'], '', $generatedReport));
-
-            // حساب إحصائيات التقرير المولّد
             $stats = $this->calculateTextStats($generatedReport, $detectedLanguage);
 
             return response()->json([
@@ -417,9 +400,9 @@ Generate the complete professional report (in {$languageName}):";
 
     /**
      * ========================================
-     * الميزة D: اقتراحات ذكية للتقرير (AI Suggestions)
+     * الميزة D: اقتراحات ذكية (AI Suggestions)
      * ========================================
-     * يقترح على الطالب ما يمكنه كتابته في تقريره بناءً على تخصصه
+     * ✅ يعمل للطالب والمشرف
      */
     public function suggestContent(Request $request)
     {
@@ -437,7 +420,6 @@ Generate the complete professional report (in {$languageName}):";
         $weekNumber = $request->input('week_number', 1);
         $language = $request->input('language');
 
-        // إذا لم يتم تحديد اللغة، اكشفها من المدخلات
         if (empty($language)) {
             $language = $this->detectLanguage($major . ' ' . $currentTasks);
         }
@@ -447,9 +429,9 @@ Generate the complete professional report (in {$languageName}):";
             'language' => $language,
             'major' => $major,
             'week_number' => $weekNumber,
+            'user_role' => $request->user()->role, // ✅ Log للدور
         ]);
 
-        // ✅ إصلاح مشكلة Intelephense: استخدام متغير بدلاً من التعبير الشرطي
         $tasksSection = '';
         if (!empty($currentTasks)) {
             $tasksSection = "- Current Tasks Mentioned: {$currentTasks}\n";
@@ -531,7 +513,6 @@ Generate the suggestions (in {$languageName}):";
                 ], 500);
             }
 
-            // تنظيف الاستجابة
             $cleanResponse = trim(str_replace(['```json', '```', '```text'], '', $aiResponse));
             $suggestions = json_decode($cleanResponse, true);
 
@@ -540,7 +521,6 @@ Generate the suggestions (in {$languageName}):";
                     'response' => $cleanResponse,
                 ]);
 
-                // استجابة افتراضية
                 return response()->json([
                     'success' => true,
                     'message' => __('messages.ai.suggest_default'),

@@ -1761,6 +1761,112 @@ Trinova integrates advanced AI capabilities using **Groq LLM** to help students 
 
 ---
 
+## 🤖 AI Features for Supervisors
+
+Supervisors can also use AI-powered features to help review and analyze student reports. All AI endpoints for supervisors work exactly the same as student endpoints.
+
+### 📡 Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/supervisor/ai/reports/improve` | Improve student report |
+| POST | `/api/supervisor/ai/reports/analyze` | Analyze student report |
+| POST | `/api/supervisor/ai/reports/generate` | Generate report from points |
+| POST | `/api/supervisor/ai/reports/suggest` | Get smart suggestions |
+
+### 🔐 Authentication
+
+```http
+POST /api/supervisor/ai/reports/improve
+Authorization: Bearer {supervisor_token}
+Content-Type: application/json
+```
+
+### 📝 Request Body
+
+Same as student AI features:
+
+```json
+{
+    "content": "تعلمت Laravel اليوم وعملت على database"
+}
+```
+
+### ✅ Success Response
+
+```json
+{
+    "success": true,
+    "message": "تم تحسين التقرير بنجاح باستخدام الذكاء الاصطناعي.",
+    "data": {
+        "original_content": "تعلمت Laravel اليوم وعملت على database",
+        "improved_content": "خلال هذا اليوم، ركزت على تطوير مهاراتي في إطار عمل Laravel...",
+        "detected_language": "arabic",
+        "original_word_count": 8,
+        "improved_word_count": 45,
+        "ai_model": "llama-3.3-70b-versatile"
+    }
+}
+```
+
+### ❌ Error Responses
+
+**403 Forbidden - Not a supervisor:**
+
+```json
+{
+    "success": false,
+    "message": "غير مصرح"
+}
+```
+
+**401 Unauthorized - Not authenticated:**
+
+```json
+{
+    "success": false,
+    "message": "غير مصرح - يرجى تسجيل الدخول أولاً"
+}
+```
+
+### 🎯 Use Cases for Supervisors
+
+1. **Review Student Reports** - Analyze quality before grading
+2. **Improve Reports** - Help students write better reports
+3. **Generate Examples** - Create example reports for guidance
+4. **Get Suggestions** - Provide topic suggestions to students
+5. **Consistent Evaluation** - Use AI to maintain evaluation standards
+
+### 🔄 Supervisor AI Workflow
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  1️⃣ Supervisor receives student report                   │
+│     ↓                                                   │
+│  2️⃣ POST /api/supervisor/ai/reports/analyze             │
+│     → Get quality score & feedback                      │
+│     ↓                                                   │
+│  3️⃣ POST /api/supervisor/ai/reports/improve             │
+│     → Generate improved version as example              │
+│     ↓                                                   │
+│  4️⃣ Supervisor reviews & grades the report              │
+│     ↓                                                   │
+│  5️⃣ Send feedback to student                            │
+└─────────────────────────────────────────────────────────┘
+```
+
+### 📊 Rate Limiting
+
+AI endpoints are rate-limited to prevent abuse:
+
+| Role | Limit |
+|------|-------|
+| Student | 10 requests per minute |
+| Supervisor | 10 requests per minute |
+
+---
+
+
 ## 🛡️ Admin Management
 
 ### List All Providers

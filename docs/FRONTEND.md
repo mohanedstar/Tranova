@@ -2236,6 +2236,258 @@ export function useAI() {
     };
 }
 ```
+---
+
+## 🤖 AI Features for Supervisors
+
+Supervisors can use the same AI features to help review and analyze student reports.
+
+### Improve Report (Supervisor)
+
+```javascript
+async function supervisorImproveReport(content) {
+    const response = await apiRequest('/supervisor/ai/reports/improve', {
+        method: 'POST',
+        body: JSON.stringify({ content })
+    });
+    
+    return await response.json();
+}
+
+// Usage
+const result = await supervisorImproveReport('تعلمت Laravel اليوم وعملت على database');
+
+if (result.success) {
+    console.log('Original:', result.data.original_content);
+    console.log('Improved:', result.data.improved_content);
+    console.log('Language:', result.data.detected_language);
+}
+```
+
+### Analyze Report (Supervisor)
+
+```javascript
+async function supervisorAnalyzeReport(content) {
+    const response = await apiRequest('/supervisor/ai/reports/analyze', {
+        method: 'POST',
+        body: JSON.stringify({ content })
+    });
+    
+    return await response.json();
+}
+
+// Usage
+const result = await supervisorAnalyzeReport('تعلمت Laravel اليوم وعملت على database');
+
+if (result.success) {
+    console.log('Quality Score:', result.data.quality_score);
+    console.log('Grade:', result.data.grade);
+    console.log('Strengths:', result.data.strengths);
+    console.log('Weaknesses:', result.data.weaknesses);
+    console.log('Feedback:', result.data.detailed_feedback);
+}
+```
+
+### Generate Report (Supervisor)
+
+```javascript
+async function supervisorGenerateReport(points, context = '') {
+    const response = await apiRequest('/supervisor/ai/reports/generate', {
+        method: 'POST',
+        body: JSON.stringify({ points, context })
+    });
+    
+    return await response.json();
+}
+
+// Usage - Create example report for students
+const result = await supervisorGenerateReport(
+    [
+        'تعلمت Laravel',
+        'عملت على database',
+        'طورت API'
+    ],
+    'مثال على تقرير أسبوعي جيد'
+);
+
+if (result.success) {
+    console.log('Example Report:', result.data.generated_report);
+}
+```
+
+### Get Suggestions (Supervisor)
+
+```javascript
+async function supervisorGetSuggestions(major, weekNumber = 1) {
+    const response = await apiRequest('/supervisor/ai/reports/suggest', {
+        method: 'POST',
+        body: JSON.stringify({
+            major,
+            week_number: weekNumber
+        })
+    });
+    
+    return await response.json();
+}
+
+// Usage - Get suggestions to share with students
+const result = await supervisorGetSuggestions('تقنية المعلومات', 3);
+
+if (result.success) {
+    console.log('Suggested Topics:', result.data.suggested_topics);
+    console.log('Suggested Tasks:', result.data.suggested_tasks);
+}
+```
+
+---
+
+## 🎨 Supervisor AI Dashboard Component (React)
+
+```javascript
+// SupervisorAIAssistant.jsx
+import { useState } from 'react';
+
+function SupervisorAIAssistant() {
+    const [content, setContent] = useState('');
+    const [result, setResult] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [mode, setMode] = useState('analyze');
+
+    async function handleAnalyze() {
+        setLoading(true);
+        const response = await supervisorAnalyzeReport(content);
+        setResult(response);
+        setLoading(false);
+    }
+
+    async function handleImprove() {
+        setLoading(true);
+        const response = await supervisorImproveReport(content);
+        setResult(response);
+        setLoading(false);
+    }
+
+    return (
+        <div className="supervisor-ai-assistant">
+            <h2>👨‍🏫 Supervisor AI Assistant</h2>
+            
+            <div className="mode-selector">
+                <button onClick={() => setMode('analyze')}>Analyze Report</button>
+                <button onClick={() => setMode('improve')}>Improve Report</button>
+            </div>
+
+            <textarea 
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="Paste student report here..."
+                rows={10}
+            />
+
+            <button onClick={mode === 'analyze' ? handleAnalyze : handleImprove} disabled={loading}>
+                {loading ? 'Processing...' : `Run ${mode}`}
+            </button>
+
+            {result && result.success && (
+                <div className="result">
+                    {mode === 'analyze' && (
+                        <div>
+                            <h3>Analysis Results:</h3>
+                            <p>Quality Score: {result.data.quality_score}/100</p>
+                            <p>Grade: {result.data.grade}</p>
+                            <h4>Strengths:</h4>
+                            <ul>
+                                {result.data.strengths.map((s, i) => <li key={i}>{s}</li>)}
+                            </ul>
+                            <h4>Weaknesses:</h4>
+                            <ul>
+                                {result.data.weaknesses.map((w, i) => <li key={i}>{w}</li>)}
+                            </ul>
+                            <h4>Feedback:</h4>
+                            <p>{result.data.detailed_feedback}</p>
+                        </div>
+                    )}
+
+                    {mode === 'improve' && (
+                        <div>
+                            <h3>Improved Version:</h3>
+                            <pre>{result.data.improved_content}</pre>
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+}
+
+export default SupervisorAIAssistant;
+```
+
+---
+
+## 🎯 Supervisor AI Use Cases
+
+### 1. Report Review Workflow
+
+```javascript
+async function reviewStudentReport(reportContent) {
+    // Step 1: Analyze the report
+    const analysis = await supervisorAnalyzeReport(reportContent);
+    
+    if (!analysis.success) {
+        return { error: 'Failed to analyze report' };
+    }
+
+    // Step 2: Get improved version as example
+    const improved = await supervisorImproveReport(reportContent);
+
+    // Step 3: Prepare feedback for student
+    return {
+        analysis: analysis.data,
+        example: improved?.data?.improved_content,
+        grade: calculateGradeFromScore(analysis.data.quality_score),
+        feedback: analysis.data.detailed_feedback
+    };
+}
+
+function calculateGradeFromScore(score) {
+    if (score >= 90) return 'A';
+    if (score >= 80) return 'B';
+    if (score >= 70) return 'C';
+    if (score >= 60) return 'D';
+    return 'F';
+}
+```
+
+### 2. Batch Analysis for Multiple Reports
+
+```javascript
+async function analyzeMultipleReports(reports) {
+    const results = [];
+    
+    for (const report of reports) {
+        try {
+            const analysis = await supervisorAnalyzeReport(report.content);
+            
+            results.push({
+                studentId: report.student_id,
+                weekNumber: report.week_number,
+                qualityScore: analysis.data?.quality_score || 0,
+                grade: analysis.data?.grade || 'N/A',
+                strengths: analysis.data?.strengths || [],
+                weaknesses: analysis.data?.weaknesses || []
+            });
+
+            // Wait to avoid rate limiting
+            await new Promise(resolve => setTimeout(resolve, 6000));
+        } catch (error) {
+            console.error(`Failed to analyze report ${report.id}:`, error);
+        }
+    }
+
+    return results;
+}
+```
+
 
 ---
 

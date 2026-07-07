@@ -2,64 +2,130 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 
 /*
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
 */
 
 // ============================================
 // ⚠️ TEMPORARY SETUP ROUTE - REMOVE AFTER SETUP!
 // ============================================
 Route::get('/setup-migrate', function () {
+    $results = [
+        'success' => false,
+        'steps' => [],
+    ];
+
     try {
-        // 1. Run migrations
-        Artisan::call('migrate', ['--force' => true]);
-        $migrationOutput = Artisan::output();
-        
-        // 2. Create admin if not exists
-        $admin = \App\Models\User::where('role', 'admin')->first();
-        if (!$admin) {
-            $password = 'Admin@123456';
-            \App\Models\User::create([
-                'name' => 'System Admin',
-                'email' => 'admin@trinova.com',
-                'password' => bcrypt($password),
-                'role' => 'admin',
-                'email_verified_at' => now(),
-                'account_status' => 'active',
-                'preferred_language' => 'ar',
-            ]);
-            
-            $adminInfo = "Admin created:\nEmail: admin@trinova.com\nPassword: {$password}\n⚠️ SAVE THIS PASSWORD!";
-        } else {
-            $adminInfo = "Admin already exists";
+        // Step 1: Test database connection
+        try {
+            DB::connection()->getPdo();
+            $results['steps'][] = [
+                'step' => 1,
+                'name' => 'Database Connection',
+                'status' => '✅ OK',
+            ];
+        } catch (\Exception $e) {
+            throw new \Exception('Database connection failed: ' . $e->getMessage());
         }
-        
-        // 3. Clear cache
-        Artisan::call('optimize:clear');
-        $cacheOutput = Artisan::output();
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Setup completed successfully!',
-            'migrations' => $migrationOutput,
-            'admin' => $adminInfo,
-            'cache' => $cacheOutput,
-        ]);
+
+        // Step 2: Run migrations
+        try {
+            Artisan::call('migrate', ['--force' => true]);
+            $migrationOutput = Artisan::output();
+            $results['steps'][] = [
+                'step' => 2,
+                'name' => 'Migrations',
+                'status' => '✅ OK',
+                'output' => $migrationOutput,
+            ];
+        } catch (\Exception $e) {
+            throw new \Exception('Migration failed: ' . $e->getMessage());
+        }
+
+        // Step 3: Create admin
+        try {
+            $admin = \App\Models\User::where('role', 'admin')->first();
+
+            if (!$admin) {
+                $password = 'Admin@123456';
+                \App\Models\User::create([
+                    'name' => 'System Admin',
+                    'email' => 'admin@trinova.com',
+                    'password' => bcrypt($password),
+                    'role' => 'admin',
+                    'email_verified_at' => now(),
+                    'account_status' => 'active',
+                    'preferred_language' => 'ar',
+                ]);
+
+                $results['steps'][] = [
+                    'step' => 3,
+                    'name' => 'Admin Creation',
+                    'status' => '✅ Created',
+                    'credentials' => [
+                        'email' => 'admin@trinova.com',
+                        'password' => $password,
+                    ],
+                ];
+            } else {
+                $results['steps'][] = [
+                    'step' => 3,
+                    'name' => 'Admin Creation',
+                    'status' => '⚠️ Already exists',
+                    'email' => $admin->email,
+                ];
+            }
+        } catch (\Exception $e) {
+            throw new \Exception('Admin creation failed: ' . $e->getMessage());
+        }
+
+        // Step 4: Clear cache
+        try {
+            Artisan::call('optimize:clear');
+            $results['steps'][] = [
+                'step' => 4,
+                'name' => 'Cache Clear',
+                'status' => '✅ OK',
+            ];
+        } catch (\Exception $e) {
+            $results['steps'][] = [
+                'step' => 4,
+                'name' => 'Cache Clear',
+                'status' => '⚠️ Warning: ' . $e->getMessage(),
+            ];
+        }
+
+        // Step 5: Check health
+        try {
+            Artisan::call('health:check');
+            $results['steps'][] = [
+                'step' => 5,
+                'name' => 'Health Check',
+                'status' => '✅ OK',
+            ];
+        } catch (\Exception $e) {
+            $results['steps'][] = [
+                'step' => 5,
+                'name' => 'Health Check',
+                'status' => '⚠️ Warning: ' . $e->getMessage(),
+            ];
+        }
+
+        $results['success'] = true;
+        $results['message'] = '✅ Setup completed successfully!';
+
     } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'error' => $e->getMessage(),
-            'trace' => config('app.debug') ? $e->getTraceAsString() : null,
-        ], 500);
+        $results['error'] = $e->getMessage();
+        $results['file'] = $e->getFile();
+        $results['line'] = $e->getLine();
+        $results['trace'] = config('app.debug') ? explode("\n", $e->getTraceAsString()) : null;
     }
+
+    return response()->json($results);
 });
 
 // ============================================
@@ -70,6 +136,6 @@ Route::get('/', function () {
         'app' => 'Trinova Platform',
         'version' => '1.0.0',
         'status' => 'active',
-        'api_docs' => url('/api/documentation'),
+        'timestamp' => now()->toIso8601String(),
     ]);
 });

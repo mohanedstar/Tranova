@@ -18,6 +18,47 @@ use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\AdminProviderController;
 use App\Http\Controllers\AdminUserController;
 
+// ============================================
+// ⚠️ TEMPORARY: Create Admin - REMOVE AFTER!
+// ============================================
+Route::get('/create-admin', function () {
+    try {
+        $admin = \App\Models\User::where('role', 'admin')->first();
+        
+        if (!$admin) {
+            $password = 'Admin@123456';
+            \App\Models\User::create([
+                'name' => 'System Admin',
+                'email' => 'admin@trinova.com',
+                'password' => bcrypt($password),
+                'role' => 'admin',
+                'email_verified_at' => now(),
+                'account_status' => 'active',
+                'preferred_language' => 'ar',
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => '✅ Admin created!',
+                'email' => 'admin@trinova.com',
+                'password' => $password,
+            ]);
+        }
+        
+        return response()->json([
+            'success' => true,
+            'message' => '️ Admin already exists',
+            'email' => $admin->email,
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage(),
+        ], 500);
+    }
+});
+
+
 // ==================== Health Check (Public - No Auth) ====================
 Route::get('/health', \App\Http\Controllers\HealthCheckController::class);
 

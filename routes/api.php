@@ -18,6 +18,8 @@ use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\AdminProviderController;
 use App\Http\Controllers\AdminUserController;
 
+// ==================== Health Check (Public - No Auth) ====================
+Route::get('/health', \App\Http\Controllers\HealthCheckController::class);
 
 // ==================== Public Routes ====================
 Route::post('/register', [AuthController::class, 'register']);

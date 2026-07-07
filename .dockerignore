@@ -1,0 +1,69 @@
+# ============================================
+# Git
+# ============================================
+.git
+.gitignore
+
+# ============================================
+# IDE & Editor
+# ============================================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ============================================
+# Dependencies
+# ============================================
+node_modules/
+vendor/
+
+# ============================================
+# Environment
+# ============================================
+.env
+.env.backup
+.env.local
+.env.production
+
+# ============================================
+# Storage (except .gitkeep)
+# ============================================
+storage/app/backups/
+storage/app/temp/
+storage/app/public/*
+!storage/app/public/.gitkeep
+storage/framework/cache/data/*
+!storage/framework/cache/data/.gitkeep
+storage/framework/sessions/*
+!storage/framework/sessions/.gitkeep
+storage/framework/views/*
+!storage/framework/views/.gitkeep
+storage/logs/*
+!storage/logs/.gitkeep
+storage/fonts/
+
+# ============================================
+# Testing
+# ============================================
+tests/
+.phpunit.cache/
+.phpunit.result.cache
+coverage/
+
+# ============================================
+# Documentation
+# ============================================
+docs/
+README.md
+LICENSE
+
+# ============================================
+# Misc
+# ============================================
+.DS_Store
+Thumbs.db
+*.log
+docker-compose.yml
+docker-compose.override.yml

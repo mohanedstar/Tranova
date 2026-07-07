@@ -1,0 +1,128 @@
+# ============================================
+# Trinova Platform - Production Dockerfile
+# Optimized for Render.com
+# ============================================
+
+# Stage 1: Build dependencies
+FROM php:8.2-fpm-alpine AS builder
+
+# Install system dependencies
+RUN apk add --no-cache \
+    git \
+    curl \
+    libpng-dev \
+    libjpeg-turbo-dev \
+    freetype-dev \
+    oniguruma-dev \
+    libxml2-dev \
+    zip \
+    unzip \
+    postgresql-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install \
+        pdo_pgsql \
+        pgsql \
+        mbstring \
+        exif \
+        pcntl \
+        bcmath \
+        gd \
+        zip \
+        opcache
+
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Set working directory
+WORKDIR /var/www/html
+
+# Copy composer files first (for better caching)
+COPY composer.json composer.lock ./
+
+# Install dependencies
+RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+
+# Copy application files
+COPY . .
+
+# Remove dev files
+RUN rm -rf node_modules tests .github .vscode .idea
+
+# ============================================
+# Stage 2: Production image
+# ============================================
+FROM php:8.2-fpm-alpine
+
+# Install runtime dependencies
+RUN apk add --no-cache \
+    nginx \
+    supervisor \
+    curl \
+    libpng \
+    libjpeg-turbo \
+    freetype \
+    oniguruma \
+    libxml2 \
+    postgresql-libs \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install \
+        pdo_pgsql \
+        pgsql \
+        mbstring \
+        exif \
+        pcntl \
+        bcmath \
+        gd \
+        zip \
+        opcache
+
+# Configure PHP
+COPY docker/php.ini /usr/local/etc/php/conf.d/custom.ini
+
+# Configure OPcache for production
+RUN echo "opcache.enable=1" >> /usr/local/etc/php/conf.d/opcache.ini \
+    && echo "opcache.memory_consumption=256" >> /usr/local/etc/php/conf.d/opcache.ini \
+    && echo "opcache.max_accelerated_files=20000" >> /usr/local/etc/php/conf.d/opcache.ini \
+    && echo "opcache.validate_timestamps=0" >> /usr/local/etc/php/conf.d/opcache.ini
+
+# Set working directory
+WORKDIR /var/www/html
+
+# Copy application from builder
+COPY --from=builder /var/www/html /var/www/html
+
+# Copy configuration files
+COPY docker/nginx.conf /etc/nginx/http.d/default.conf
+COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Create necessary directories
+RUN mkdir -p \
+    /var/www/html/storage/app/public \
+    /var/www/html/storage/app/public/certificates \
+    /var/www/html/storage/framework/cache/data \
+    /var/www/html/storage/framework/sessions \
+    /var/www/html/storage/framework/testing \
+    /var/www/html/storage/framework/views \
+    /var/www/html/storage/logs \
+    /var/www/html/storage/fonts \
+    /var/www/html/bootstrap/cache \
+    /var/log/supervisor \
+    /run/nginx
+
+# Set permissions
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 775 /var/www/html/storage \
+    && chmod -R 775 /var/www/html/bootstrap/cache
+
+# Create storage link
+RUN php artisan storage:link || true
+
+# Expose port (Render uses PORT environment variable)
+EXPOSE 10000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:10000/api/health || exit 1
+
+# Start supervisor
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

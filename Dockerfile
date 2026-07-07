@@ -3,10 +3,9 @@
 # Optimized for Render.com
 # ============================================
 
-# Stage 1: Build dependencies
-FROM php:8.2-fpm-alpine AS builder
+FROM php:8.2-fpm-alpine
 
-# Install system dependencies
+# Install system dependencies (including zlib-dev)
 RUN apk add --no-cache \
     git \
     curl \
@@ -18,8 +17,17 @@ RUN apk add --no-cache \
     zip \
     unzip \
     postgresql-dev \
+    zlib-dev \
+    nginx \
+    supervisor \
+    libpng \
+    libjpeg-turbo \
+    freetype \
+    oniguruma \
+    libxml2 \
+    postgresql-libs \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install \
+    && docker-php-ext-install -j$(nproc) \
         pdo_pgsql \
         pgsql \
         mbstring \
@@ -33,63 +41,17 @@ RUN apk add --no-cache \
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+# Configure PHP
+COPY docker/php.ini /usr/local/etc/php/conf.d/custom.ini
+
 # Set working directory
 WORKDIR /var/www/html
-
-# Copy composer files first (for better caching)
-COPY composer.json composer.lock ./
-
-# Install dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
 # Copy application files
 COPY . .
 
-# Remove dev files
-RUN rm -rf node_modules tests .github .vscode .idea
-
-# ============================================
-# Stage 2: Production image
-# ============================================
-FROM php:8.2-fpm-alpine
-
-# Install runtime dependencies
-RUN apk add --no-cache \
-    nginx \
-    supervisor \
-    curl \
-    libpng \
-    libjpeg-turbo \
-    freetype \
-    oniguruma \
-    libxml2 \
-    postgresql-libs \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install \
-        pdo_pgsql \
-        pgsql \
-        mbstring \
-        exif \
-        pcntl \
-        bcmath \
-        gd \
-        zip \
-        opcache
-
-# Configure PHP
-COPY docker/php.ini /usr/local/etc/php/conf.d/custom.ini
-
-# Configure OPcache for production
-RUN echo "opcache.enable=1" >> /usr/local/etc/php/conf.d/opcache.ini \
-    && echo "opcache.memory_consumption=256" >> /usr/local/etc/php/conf.d/opcache.ini \
-    && echo "opcache.max_accelerated_files=20000" >> /usr/local/etc/php/conf.d/opcache.ini \
-    && echo "opcache.validate_timestamps=0" >> /usr/local/etc/php/conf.d/opcache.ini
-
-# Set working directory
-WORKDIR /var/www/html
-
-# Copy application from builder
-COPY --from=builder /var/www/html /var/www/html
+# Install PHP dependencies
+RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --ignore-platform-reqs
 
 # Copy configuration files
 COPY docker/nginx.conf /etc/nginx/http.d/default.conf

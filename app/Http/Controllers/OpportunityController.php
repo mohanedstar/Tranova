@@ -11,83 +11,88 @@ class OpportunityController extends Controller
     /**
      * عرض جميع الفرص المتاحة (للطلاب)
      */
-    public function index(SearchOpportunitiesRequest $request)
-    {
-        $query = InternshipOpportunity::query()
-            ->with(['provider.user'])
-            ->where('status', 'open')
-            ->where('application_deadline', '>=', now());
+public function index(SearchOpportunitiesRequest $request)
+{
+    // ✅ Dynamic operator for PostgreSQL/MySQL compatibility
+    // PostgreSQL: ILIKE (case-insensitive)
+    // MySQL: LIKE (case-insensitive by default)
+    $searchOperator = config('database.default') === 'pgsql' ? 'ilike' : 'like';
 
-        // 1️⃣ البحث النصي (في العنوان، الوصف، واسم الشركة)
-        if ($request->filled('search')) {
-            $searchTerm = $request->search;
-            $query->where(function ($q) use ($searchTerm) {
-                $q->where('title', 'like', "%{$searchTerm}%")
-                  ->orWhere('description', 'like', "%{$searchTerm}%")
-                  ->orWhere('required_major', 'like', "%{$searchTerm}%")
-                  ->orWhereHas('provider.user', function ($userQuery) use ($searchTerm) {
-                      $userQuery->where('name', 'like', "%{$searchTerm}%")
-                                ->orWhere('organization_name', 'like', "%{$searchTerm}%");
-                  });
-            });
-        }
+    $query = InternshipOpportunity::query()
+        ->with(['provider.user'])
+        ->where('status', 'open')
+        ->where('application_deadline', '>=', now());
 
-        // 2️⃣ الفلترة حسب التخصص
-        if ($request->filled('major')) {
-            $query->where('required_major', 'like', "%{$request->major}%");
-        }
-
-        // 3️⃣ الفلترة حسب الموقع
-        if ($request->filled('location')) {
-            $query->where('location', 'like', "%{$request->location}%");
-        }
-
-        // 4️⃣ الفلترة حسب نوع العمل (عن بعد)
-        if ($request->has('is_remote')) {
-            $query->where('is_remote', $request->boolean('is_remote'));
-        }
-
-        // 5️⃣ الفلترة حسب الراتب (مدفوع/غير مدفوع)
-        if ($request->has('is_paid')) {
-            $query->where('is_paid', $request->boolean('is_paid'));
-        }
-
-        // 6️⃣ الفلترة حسب نطاق الراتب
-        if ($request->filled('min_salary')) {
-            $query->where('salary', '>=', $request->min_salary);
-        }
-        if ($request->filled('max_salary')) {
-            $query->where('salary', '<=', $request->max_salary);
-        }
-
-        // 7️⃣ الترتيب (Sorting)
-        $sortBy = $request->input('sort_by', 'created_at');
-        $sortOrder = $request->input('sort_order', 'desc');
-        $query->orderBy($sortBy, $sortOrder);
-
-        // 8️⃣ Pagination (عدد النتائج في الصفحة)
-        $perPage = $request->input('per_page', 15);
-        $opportunities = $query->paginate($perPage);
-
-        return response()->json([
-            'success' => true,
-            'data' => $opportunities,
-            'filters_applied' => [
-                'search' => $request->search,
-                'major' => $request->major,
-                'location' => $request->location,
-                'is_remote' => $request->is_remote,
-                'is_paid' => $request->is_paid,
-                'salary_range' => [$request->min_salary, $request->max_salary],
-            ],
-            'meta' => [
-                'total' => $opportunities->total(),
-                'current_page' => $opportunities->currentPage(),
-                'last_page' => $opportunities->lastPage(),
-                'per_page' => $opportunities->perPage(),
-            ]
-        ]);
+    // 1️⃣ البحث النصي (في العنوان، الوصف، واسم الشركة)
+    if ($request->filled('search')) {
+        $searchTerm = $request->search;
+        $query->where(function ($q) use ($searchTerm, $searchOperator) {
+            $q->where('title', $searchOperator, "%{$searchTerm}%")
+              ->orWhere('description', $searchOperator, "%{$searchTerm}%")
+              ->orWhere('required_major', $searchOperator, "%{$searchTerm}%")
+              ->orWhereHas('provider.user', function ($userQuery) use ($searchTerm, $searchOperator) {
+                  $userQuery->where('name', $searchOperator, "%{$searchTerm}%")
+                            ->orWhere('organization_name', $searchOperator, "%{$searchTerm}%");
+              });
+        });
     }
+
+    // 2️⃣ الفلترة حسب التخصص
+    if ($request->filled('major')) {
+        $query->where('required_major', $searchOperator, "%{$request->major}%");
+    }
+
+    // 3️⃣ الفلترة حسب الموقع
+    if ($request->filled('location')) {
+        $query->where('location', $searchOperator, "%{$request->location}%");
+    }
+
+    // 4️⃣ الفلترة حسب نوع العمل (عن بعد)
+    if ($request->has('is_remote')) {
+        $query->where('is_remote', $request->boolean('is_remote'));
+    }
+
+    // 5️⃣ الفلترة حسب الراتب (مدفوع/غير مدفوع)
+    if ($request->has('is_paid')) {
+        $query->where('is_paid', $request->boolean('is_paid'));
+    }
+
+    // 6️⃣ الفلترة حسب نطاق الراتب
+    if ($request->filled('min_salary')) {
+        $query->where('salary', '>=', $request->min_salary);
+    }
+    if ($request->filled('max_salary')) {
+        $query->where('salary', '<=', $request->max_salary);
+    }
+
+    // 7️⃣ الترتيب (Sorting)
+    $sortBy = $request->input('sort_by', 'created_at');
+    $sortOrder = $request->input('sort_order', 'desc');
+    $query->orderBy($sortBy, $sortOrder);
+
+    // 8️⃣ Pagination (عدد النتائج في الصفحة)
+    $perPage = $request->input('per_page', 15);
+    $opportunities = $query->paginate($perPage);
+
+    return response()->json([
+        'success' => true,
+        'data' => $opportunities,
+        'filters_applied' => [
+            'search' => $request->search,
+            'major' => $request->major,
+            'location' => $request->location,
+            'is_remote' => $request->is_remote,
+            'is_paid' => $request->is_paid,
+            'salary_range' => [$request->min_salary, $request->max_salary],
+        ],
+        'meta' => [
+            'total' => $opportunities->total(),
+            'current_page' => $opportunities->currentPage(),
+            'last_page' => $opportunities->lastPage(),
+            'per_page' => $opportunities->perPage(),
+        ]
+    ]);
+}
 
     /**
      * عرض تفاصيل فرصة واحدة

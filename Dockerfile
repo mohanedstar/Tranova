@@ -5,7 +5,7 @@
 
 FROM php:8.2-fpm-alpine
 
-# Install system dependencies (including zlib-dev)
+# Install system dependencies (including libzip-dev)
 RUN apk add --no-cache \
     git \
     curl \
@@ -14,6 +14,7 @@ RUN apk add --no-cache \
     freetype-dev \
     oniguruma-dev \
     libxml2-dev \
+    libzip-dev \
     zip \
     unzip \
     postgresql-dev \

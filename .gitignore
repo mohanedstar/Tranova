@@ -1,25 +1,37 @@
+# ============================================
 # Laravel
+# ============================================
 /vendor/
 node_modules/
 npm-debug.log
 yarn-error.log
 
-# Environment
+# ============================================
+# Environment Files
+# ============================================
 .env
 .env.backup
+.env.local
 .env.production
 .phpunit.result.cache
 
-# IDE
+# ============================================
+# IDE & Editor
+# ============================================
 /.idea/
 /.vscode/
 *.swp
 *.swo
 *~
 .DS_Store
+Thumbs.db
 
+# ============================================
 # Storage (except .gitkeep)
+# ============================================
 /storage/*.key
+/storage/app/backups/
+/storage/app/temp/
 /storage/app/public/*
 !/storage/app/public/.gitkeep
 /storage/framework/cache/data/*
@@ -30,19 +42,46 @@ yarn-error.log
 !/storage/framework/views/.gitkeep
 /storage/logs/*
 !/storage/logs/.gitkeep
+/storage/fonts/
 
-# Compiled
+# ============================================
+# Bootstrap Cache
+# ============================================
+/bootstrap/cache/*.php
+!/bootstrap/cache/.gitkeep
+
+# ============================================
+# Compiled Assets
+# ============================================
 /public/hot
 /public/storage
 /public/css/
 /public/js/
+/public/build/
 /public/mix-manifest.json
 
+# ============================================
 # Testing
+# ============================================
 /coverage/
 .phpunit.cache/
 
+# ============================================
+# Logs
+# ============================================
+*.log
+/storage/logs/laravel.log
+
+# ============================================
+# Database Backups
+# ============================================
+*.sql
+*.sql.gz
+database/backups/
+
+# ============================================
 # Misc
+# ============================================
 Homestead.json
 Homestead.yaml
 auth.json
